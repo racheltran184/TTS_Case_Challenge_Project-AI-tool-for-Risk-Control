@@ -1,0 +1,1381 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TÍCH TẮC 12.12 · Mission Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#F5F6F8;--surface:#FFFFFF;--surface-2:#F0F2F5;--ink:#111827;--ink-2:#374151;--mut:#6B7280;--line:#E2E6EB;--line-2:#D1D6DD;
+  --acc:#0F766E;--acc-ink:#FFFFFF;--acc-soft:#E6F2F1;
+  --g:#15803D;--g-soft:#E8F5EC;--a:#B45309;--a-soft:#FDF3E2;--r:#B91C1C;--r-soft:#FCEBEB;--u:#6B7280;--u-soft:#EEF0F3;
+  --radius:10px;--shadow:0 1px 2px rgba(16,24,40,.05);
+  --font:'Be Vietnam Pro',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#0C1118;--surface:#141B24;--surface-2:#1A232E;--ink:#E7ECF2;--ink-2:#C5CDD8;--mut:#93A0B1;--line:#243040;--line-2:#2E3B4D;
+  --acc:#2BB3A6;--acc-ink:#071412;--acc-soft:#123130;
+  --g:#4ADE80;--g-soft:#11291B;--a:#F5B54A;--a-soft:#2E2412;--r:#F87171;--r-soft:#341818;--u:#94A3B8;--u-soft:#1C2531;
+  --shadow:none;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+.num,table td,.kpi .v,.hour .gv{font-variant-numeric:tabular-nums lining-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.01em}
+p{margin:0}
+a{color:var(--acc)}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:1480px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand svg{width:30px;height:30px;color:var(--acc);flex:none}
+.brand h1{font-size:16px;line-height:1.2}
+.brand .sub{font-size:12px;color:var(--mut)}
+.tabs{display:flex;gap:2px;background:var(--surface-2);padding:3px;border-radius:8px;margin-left:auto}
+.tab{border:0;background:transparent;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;color:var(--mut);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.icon-btn{border:1px solid var(--line);background:var(--surface);width:34px;height:34px;border-radius:8px;display:grid;place-items:center;cursor:pointer;color:var(--ink-2)}
+.icon-btn svg{width:16px;height:16px}
+
+main{max-width:1480px;margin:0 auto;padding:20px 24px 64px}
+.view[hidden]{display:none}
+
+/* layout */
+.live{display:grid;grid-template-columns:320px minmax(0,1fr);gap:20px;align-items:start}
+.side{position:sticky;top:76px;display:flex;flex-direction:column;gap:14px}
+.stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+@media(max-width:1060px){.live{grid-template-columns:1fr}.side{position:static;order:2}}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 16px 0}
+.card-h h2{font-size:14px}
+.card-h .meta{font-size:12px;color:var(--mut)}
+.card-b{padding:12px 16px 16px}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);font-weight:600}
+.cap{font-size:12px;color:var(--mut)}
+
+/* forms */
+.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mut)}
+.field input,.field select,.field textarea{width:100%;background:var(--surface);border:1px solid var(--line-2);border-radius:7px;padding:7px 9px;font-size:14px;color:var(--ink)}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--acc);outline-offset:-1px;border-color:transparent}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{border:1px solid transparent;background:var(--acc);color:var(--acc-ink);border-radius:7px;padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn.ghost{background:var(--surface);color:var(--ink);border-color:var(--line-2)}
+.btn.sm{padding:4px 9px;font-size:12px;font-weight:500}
+.btn:hover{filter:brightness(.97)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.msg{font-size:12px;color:var(--mut);min-height:18px}
+.msg.err{color:var(--r)}
+details.set summary{cursor:pointer;font-weight:600;font-size:13px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.set summary::-webkit-details-marker{display:none}
+details.set summary::after{content:"+";color:var(--mut);font-weight:400;font-size:16px}
+details.set[open] summary::after{content:"–"}
+.tag{display:inline-block;white-space:nowrap;font-size:10.5px;font-weight:600;letter-spacing:.03em;padding:1px 6px;border-radius:4px;border:1px solid var(--line-2);color:var(--mut);vertical-align:1px}
+.tag.case{color:#1D4ED8;border-color:#BFD0F5;background:#EEF3FD}
+.tag.der{color:#6D28D9;border-color:#D9CCF5;background:#F4EFFD}
+.tag.rule{color:#9A3412;border-color:#F2D1BF;background:#FDF2EC}
+[data-theme="dark"] .tag.case{color:#93B4F8;border-color:#2A3D66;background:#16213A}
+[data-theme="dark"] .tag.der{color:#C4A8F7;border-color:#3D2D63;background:#211936}
+[data-theme="dark"] .tag.rule{color:#F3B08B;border-color:#5A3322;background:#2D1A12}
+
+/* status banner */
+.banner{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;padding:16px 18px;border-left:4px solid var(--u)}
+.banner[data-s="g"]{border-left-color:var(--g)}.banner[data-s="a"]{border-left-color:var(--a)}.banner[data-s="r"]{border-left-color:var(--r)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:var(--u-soft);color:var(--u);white-space:nowrap}
+.pill i{width:8px;height:8px;border-radius:50%;background:currentColor}
+.pill[data-s="g"]{background:var(--g-soft);color:var(--g)}.pill[data-s="a"]{background:var(--a-soft);color:var(--a)}.pill[data-s="r"]{background:var(--r-soft);color:var(--r)}.pill[data-s="o"]{background:var(--surface-2);color:var(--ink-2)}
+.banner .hl{font-size:17px;font-weight:600;line-height:1.35}
+.banner .sl{font-size:13px;color:var(--mut);margin-top:2px}
+.streak{display:flex;gap:5px;align-items:center;font-size:12px;color:var(--mut)}
+.streak b{display:block;width:22px;height:8px;border-radius:2px;background:var(--line-2)}
+.streak b.on{background:var(--r)}
+.streak b.one{background:var(--a)}
+@media(max-width:700px){.banner{grid-template-columns:1fr}}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0}
+.kpi{padding:14px 16px;border-right:1px solid var(--line)}
+.kpi:last-child{border-right:0}
+.kpi .l{font-size:12px;color:var(--mut)}
+.kpi .v{font-size:22px;font-weight:600;letter-spacing:-.01em;margin-top:2px}
+.kpi .d{font-size:12px;color:var(--mut);margin-top:2px}
+.kpi .d.g{color:var(--g)}.kpi .d.r{color:var(--r)}.kpi .d.a{color:var(--a)}
+@media(max-width:1200px){.kpis{grid-template-columns:repeat(3,1fr)}.kpi:nth-child(3){border-right:0}.kpi:nth-child(-n+3){border-bottom:1px solid var(--line)}}
+@media(max-width:820px){.kpis{grid-template-columns:repeat(2,1fr)}.kpi{border-right:1px solid var(--line)!important;border-bottom:1px solid var(--line)}.kpi:nth-child(2n){border-right:0!important}}
+
+/* hour grid */
+.shifts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.shift{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--surface-2)}
+.shift.now{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+.shift-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:8px}
+.shift-h b{font-size:12.5px}
+.shift-h span{font-size:11.5px;color:var(--mut)}
+.hours{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.hour{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 6px 6px;min-height:70px;display:flex;flex-direction:column;gap:2px;position:relative;overflow:hidden}
+.hour .hn{font-size:11px;color:var(--mut)}
+.hour .gv{font-size:13px;font-weight:600}
+.hour .st{font-size:10.5px;font-weight:600;margin-top:auto}
+.hour .bar{position:absolute;left:0;bottom:0;height:3px;background:var(--line-2)}
+.hour[data-s="g"] .st{color:var(--g)}.hour[data-s="g"] .bar{background:var(--g)}
+.hour[data-s="r"]{background:var(--r-soft);border-color:transparent}.hour[data-s="r"] .st{color:var(--r)}.hour[data-s="r"] .bar{background:var(--r)}
+.hour[data-s="u"] .st{color:var(--u)}
+.hour[data-s="p"] .gv{color:var(--line-2)}
+.shift-f{font-size:11.5px;color:var(--mut);margin-top:8px}
+@media(max-width:900px){.shifts{grid-template-columns:1fr}}
+
+.two{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px}
+@media(max-width:1200px){.two{grid-template-columns:1fr}}
+svg.chart{width:100%;height:auto;display:block}
+.ax{fill:var(--mut);font-size:11px;font-family:var(--font)}
+.gl{stroke:var(--line)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:18px;height:0;border-top:2px solid}
+
+/* next move */
+.next .step{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.next .step:first-of-type{border-top:0;padding-top:0}
+.next .n{width:22px;height:22px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--ink-2)}
+.next .who{font-size:11.5px;color:var(--mut);margin-top:2px}
+.next .what{font-weight:500}
+.rulebox{background:var(--surface-2);border-radius:8px;padding:10px 12px;font-size:12.5px;color:var(--ink-2);margin-bottom:12px}
+.rulebox[data-s="r"]{background:var(--r-soft);color:var(--ink)}
+.rulebox[data-s="a"]{background:var(--a-soft);color:var(--ink)}
+.rulebox[data-s="g"]{background:var(--g-soft);color:var(--ink)}
+
+/* drivers */
+.drivers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0}
+.drv{padding:14px 16px;border-right:1px solid var(--line)}
+.drv:last-child{border-right:0}
+.drv .top-r{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.drv .nm{font-size:12px;color:var(--mut)}
+.drv .v{font-size:20px;font-weight:600;margin-top:4px}
+.drv .t{font-size:12px;color:var(--mut)}
+.meter{height:6px;background:var(--surface-2);border-radius:3px;margin:10px 0 8px;position:relative;overflow:hidden}
+.meter span{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--u)}
+.meter em{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink-2)}
+.drv[data-s="g"] .meter span{background:var(--g)}.drv[data-s="r"] .meter span{background:var(--r)}
+.drv .act{font-size:12px;color:var(--ink-2)}
+.formula{font-size:12px;color:var(--mut);padding:10px 16px;border-top:1px solid var(--line)}
+@media(max-width:820px){.drivers{grid-template-columns:1fr}.drv{border-right:0;border-bottom:1px solid var(--line)}}
+
+/* tables */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11.5px;font-weight:600;color:var(--mut);background:var(--surface-2)}
+td.l,th.l{text-align:left}
+td .pill{font-size:11px;padding:2px 8px}
+.empty{padding:22px 16px;text-align:center;color:var(--mut);font-size:13px}
+.snap-list td{padding:6px 8px;font-size:12px}
+
+/* runway */
+.rw-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.rw-head h2{font-size:18px}
+.timeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+@media(max-width:1200px){.timeline{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.timeline{grid-template-columns:1fr}}
+.phase{display:flex;flex-direction:column}
+.phase.now{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+.ph-top{padding:14px 14px 10px;border-bottom:1px solid var(--line)}
+.ph-top .row1{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ph-top h3{font-size:15px;margin-top:6px}
+.ph-top .dt{font-size:12px;color:var(--mut)}
+.ph-sec{padding:10px 14px;border-bottom:1px solid var(--line);font-size:12.5px}
+.ph-sec:last-child{border-bottom:0}
+.ph-sec .eyebrow{display:block;margin-bottom:4px}
+.ph-sec.sig{background:var(--surface-2)}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink-2);margin:5px 0;cursor:pointer}
+.chk input{margin-top:2px;accent-color:var(--acc)}
+.ph-res{font-size:12.5px;font-weight:600;margin-top:8px}
+.progress{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:6px;position:relative}
+.progress span{display:block;height:100%;background:var(--acc)}
+.progress em{position:absolute;top:0;bottom:0;width:2px;background:var(--ink)}
+.gate{margin-top:16px;display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;padding:16px 18px;border-left:4px solid var(--u)}
+.gate[data-s="g"]{border-left-color:var(--g)}.gate[data-s="r"]{border-left-color:var(--r)}
+.gate .big{font-size:20px;font-weight:700}
+
+/* method */
+.method{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:1060px){.method{grid-template-columns:1fr}}
+.method td{white-space:normal;text-align:left;vertical-align:top}
+.method td:first-child{white-space:nowrap;font-weight:600}
+.list{margin:0;padding-left:18px}
+.list li{margin:6px 0;color:var(--ink-2)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:50}
+.toast.on{opacity:1}
+@media(max-width:700px){
+  .top-in{padding:10px 14px;gap:10px}
+  .tabs{order:3;width:100%;margin-left:0}.tab{flex:1;padding:6px 6px}
+  .brand{flex:1}
+  main{padding:14px 12px 48px}
+  #log-form{grid-template-columns:1fr 1fr!important}
+  #log-form .field:nth-child(3),#log-form .btn{grid-column:1/-1}
+  .hours{gap:4px}.hour{padding:6px 4px 5px;min-height:62px}.hour .gv{font-size:11.5px}
+  .kpi .v{font-size:19px}
+}
+.canc{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,1.4fr);gap:0}
+.canc>div{padding:14px 16px;border-right:1px solid var(--line)}.canc>div:last-child{border-right:0}
+.canc .v{font-size:20px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+@media(max-width:1060px){.canc{grid-template-columns:1fr 1fr}.canc>div{border-bottom:1px solid var(--line)}.canc>div:last-child{grid-column:1/-1}}
+.guide{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;align-items:start}
+.guide nav{position:sticky;top:76px;display:flex;flex-direction:column;gap:2px}
+.guide nav a{padding:6px 10px;border-radius:6px;color:var(--ink-2);text-decoration:none;font-size:13px}
+.guide nav a:hover{background:var(--surface-2)}
+.guide section.card{scroll-margin-top:80px}
+.guide h3{font-size:15px;margin-bottom:8px}
+.steps{counter-reset:st;list-style:none;margin:0;padding:0}
+.steps li{counter-increment:st;position:relative;padding:0 0 12px 34px;color:var(--ink-2)}
+.steps li::before{content:counter(st);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--acc-soft);color:var(--acc);font-size:12px;font-weight:700;display:grid;place-items:center}
+.steps li b{color:var(--ink)}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:6px 14px;font-size:13px}
+.kv dt{font-weight:600}.kv dd{margin:0;color:var(--ink-2)}
+.hint{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;background:var(--acc-soft);border:1px solid transparent;border-radius:var(--radius);font-size:13px}
+@media(max-width:820px){.guide{grid-template-columns:1fr}.guide nav{position:static;flex-direction:row;flex-wrap:wrap}.kv{grid-template-columns:1fr}}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" fill="none" aria-label="Tỉch Tắc logo" role="img">
+        <circle cx="16" cy="16" r="13" stroke="currentColor" stroke-width="2.5"/>
+        <path d="M16 8v8l5.5 3.2" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="16" cy="16" r="2" fill="currentColor"/>
+      </svg>
+      <div>
+        <h1>TỈCH TẮC 12.12 · Mission Control</h1>
+        <div class="sub">Creator B · USD 1M ordered GMV · 12 Dec, 08:00–23:00</div>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Views">
+      <button class="tab" role="tab" data-view="live" aria-selected="true">Live day</button>
+      <button class="tab" role="tab" data-view="runway" aria-selected="false">63-day runway</button>
+      <button class="tab" role="tab" data-view="method" aria-selected="false">Numbers &amp; rules</button>
+      <button class="tab" role="tab" data-view="guide" aria-selected="false">How to use</button>
+    </nav>
+    <button class="icon-btn" id="theme" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main>
+<!-- LIVE DAY -->
+<section class="view" id="view-live">
+  <div class="live">
+    <aside class="side">
+      <div class="card">
+        <div class="card-h"><h2>Hourly entry</h2><span class="meta">cumulative, from dashboard</span></div>
+        <div class="card-b">
+          <div class="grid2">
+            <label class="field">Hour ending<select id="in-t"></select></label>
+            <label class="field">Cumulative GMV ($)<input id="in-g" inputmode="decimal" autocomplete="off"></label>
+            <label class="field">Cumulative orders<input id="in-o" inputmode="numeric" autocomplete="off"></label>
+            <label class="field">Cumulative views<input id="in-v" inputmode="numeric" autocomplete="off"></label>
+          </div>
+          <label class="field" style="margin-top:10px">Cumulative cancelled GMV ($) · optional<input id="in-k" inputmode="decimal" autocomplete="off" placeholder="leave blank if not available"></label>
+          <div class="btns" style="margin-top:12px"><button class="btn" id="add">Save hour</button><button class="btn ghost" id="clr">Clear day</button></div>
+          <p class="msg" id="msg" role="status"></p>
+          <div id="snaps"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Import</h2><span class="meta">.xlsx or .csv</span></div>
+        <div class="card-b">
+          <p class="cap" style="margin-bottom:8px">Columns: <b>time, cumulative_gmv, cumulative_orders, cumulative_views</b>. Optional: <b>cumulative_cancelled_gmv</b>. One row per hour (09:00 to 23:00).</p>
+          <input type="file" id="file" accept=".xlsx,.xls,.csv" style="font-size:12px;max-width:100%">
+          <p class="msg" id="imsg" role="status"></p>
+          <div class="btns"><button class="btn ghost sm" id="tpl">Download template</button><button class="btn ghost sm" id="demo">Load demo (illustrative)</button></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-b">
+          <details class="set" id="settings">
+            <summary>Plan settings</summary>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+              <label class="field">Target GMV ($) <span><span class="tag case">CASE</span></span><input id="s-target"></label>
+              <div class="grid2">
+                <label class="field">Show starts<input id="s-start"></label>
+                <label class="field">Show ends<input id="s-end"></label>
+              </div>
+              <label class="field">Shift resets (comma separated) <span><span class="tag rule">DECK RULE</span></span><input id="s-shifts"></label>
+              <label class="field">Views per hour target <span><span class="tag rule">DECK</span> <span class="tag case">T1</span></span><input id="s-vph"></label>
+              <div class="grid2">
+                <label class="field">Orders per 1,000 views <span><span class="tag der">DERIVED</span></span><input id="s-opk"></label>
+                <label class="field">AOV ($) <span><span class="tag der">DERIVED</span></span><input id="s-aov"></label>
+              </div>
+              <p class="cap" id="s-check"></p>
+              <button class="btn ghost sm" id="s-reset" style="align-self:flex-start">Reset to deck values</button>
+            </div>
+          </details>
+        </div>
+      </div>
+    </aside>
+
+    <div class="stack">
+      <div class="hint" id="hint"><span><b>First time here?</b> Read the short guide before the 11.11 rehearsal.</span><button class="btn sm" data-go="guide">How to use</button></div>
+      <div class="card banner" id="banner" data-s="u">
+        <span class="pill" id="b-pill"><i></i><span>No data</span></span>
+        <div><p class="hl" id="b-hl">Enter the first hour at 09:00 to start tracking.</p><p class="sl" id="b-sl">Every hour must pass the fixed bar of $66,667 (USD 1M ÷ 15 hours).</p></div>
+        <div class="streak" id="b-streak" title="Consecutive hours below the bar"></div>
+      </div>
+
+      <div class="card kpis" id="kpis"></div>
+
+      <div class="card">
+        <div class="card-h"><h2>Hour by hour</h2><span class="meta" id="bar-meta">Pass mark $66,667 per hour</span></div>
+        <div class="card-b"><div class="shifts" id="shifts"></div></div>
+      </div>
+
+      <div class="two">
+        <div class="card">
+          <div class="card-h"><h2>Cumulative GMV vs straight-line plan</h2><span class="meta">no forecast drawn</span></div>
+          <div class="card-b">
+            <svg class="chart" id="chart" viewBox="0 0 720 270" role="img" aria-label="Cumulative ordered GMV against the straight-line plan"></svg>
+            <div class="legend"><span><i style="border-color:var(--mut);border-top-style:dashed"></i>Plan: $66,667 × hours</span><span><i style="border-color:var(--acc)"></i>Ordered GMV</span><span><i style="border-color:var(--r)"></i>USD 1M target</span></div>
+          </div>
+        </div>
+        <div class="card next">
+          <div class="card-h"><h2>Next move</h2><span class="meta">from deck Q3 and Q4</span></div>
+          <div class="card-b" id="next"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Three drivers, latest hour</h2><span class="meta" id="drv-meta"></span></div>
+        <div class="drivers" id="drivers"></div>
+        <p class="formula">GMV per hour = views per hour × orders per 1,000 views × AOV ÷ 1,000 (deck Q2). Each driver is read against its deck target; the three ratios multiply to the hour's GMV against target, so the smallest one is the binding driver.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Cancellations</h2><span class="meta">tracked next to GMV, not deducted from the pass mark</span></div>
+        <div class="canc" id="canc"></div>
+        <p class="formula">Cancel share = cumulative cancelled GMV ÷ cumulative ordered GMV. Net GMV = ordered − cancelled. The benchmark is our own 11.11 rehearsal share (Runway tab, Prove phase), not a market figure. Orders can still be cancelled after the live, so the live-day share understates the final one.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Hourly log</h2><div class="btns"><button class="btn ghost sm" id="copy">Copy hourly update</button><button class="btn sm" id="xlsx">Export Excel</button><button class="btn ghost sm" id="json">Export JSON</button></div></div>
+        <div class="card-b" style="padding-left:0;padding-right:0;padding-bottom:0"><div class="tbl-wrap" id="table"></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Decision log</h2><span class="meta">who did what, when — for the 13 Dec review</span></div>
+        <div class="card-b">
+          <div style="display:grid;grid-template-columns:110px 170px 1fr auto;gap:10px;align-items:end" id="log-form">
+            <label class="field">Time<input id="lg-t" placeholder="15:05"></label>
+            <label class="field">Owner<select id="lg-o"><option>TTS Ops</option><option>Creator B</option><option>Brand rep</option><option>Creator + Brand</option></select></label>
+            <label class="field">Action taken<input id="lg-a" placeholder="e.g. Shift reset brought forward: hero deal SKU-07"></label>
+            <button class="btn" id="lg-add">Log</button>
+          </div>
+          <div id="log" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RUNWAY -->
+<section class="view" id="view-runway" hidden>
+  <div class="rw-head">
+    <div>
+      <p class="eyebrow">Deck Q4 · staged risk control</p>
+      <h2>63 days, five phases, one go / no-go gate</h2>
+      <p class="cap" id="rw-sum" style="margin-top:4px"></p>
+    </div>
+    <label class="field" style="width:180px">Status as of<input type="date" id="asof"></label>
+  </div>
+  <div class="timeline" id="timeline"></div>
+  <div class="card gate" id="gate" data-s="u"></div>
+</section>
+
+<!-- METHOD -->
+<section class="view" id="view-method" hidden>
+  <div class="rw-head">
+    <div>
+      <p class="eyebrow">Every number has a source</p>
+      <h2>Numbers and rules used by this tool</h2>
+      <p class="cap" style="margin-top:4px">CASE = case data (Tables 1–5). DERIVED = arithmetic on case data, formula shown. EXTERNAL = a named published source. DECK RULE = a management rule from our solution deck (or marked tool rule), not a research finding.</p>
+    </div>
+  </div>
+  <div class="method">
+    <div class="card"><div class="tbl-wrap" id="ledger"></div></div>
+    <div class="stack">
+      <div class="card">
+        <div class="card-h"><h2>What the tool does</h2></div>
+        <div class="card-b"><ul class="list">
+          <li>Checks every completed hour against one fixed bar: target ÷ show hours.</li>
+          <li>Fires the deck's live-day warning when two hours in a row miss the bar.</li>
+          <li>Splits each hour into views, orders per 1,000 views and AOV, and names the weakest.</li>
+          <li>Shows only actions already written in the deck (Q3 funnel actions, Q4 shift control), each with its owner.</li>
+          <li>Tracks the four pre-live warning signals and the 14 Nov go / no-go gate.</li>
+          <li>Tracks cancellations and net GMV against the 11.11 rehearsal share.</li>
+        </ul></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>What it deliberately does not do</h2></div>
+        <div class="card-b"><ul class="list">
+          <li>No forecast, hourly shape or simulation: nothing in the case data supports one, so the plan is a straight line.</li>
+          <li>No 90% / 80% amber and red bands: no case data or research backs them. An hour passes or misses.</li>
+          <li>No AI hand-off. The rules run in code, so the same data always gives the same answer, and people decide.</li>
+          <li>No guessed values. Missing or skipped hours show as unknown, never as zero.</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="view" id="view-guide" hidden>
+  <div class="rw-head"><div><p class="eyebrow">Guide</p><h2>How to use Mission Control</h2><p class="cap" style="margin-top:4px">One owner (TTS Ops) enters data. Everyone reads the same screen. The rules run in code, and people decide and log.</p></div></div>
+  <div class="guide">
+    <nav aria-label="Guide sections"><a href="#g1">1. Set up once</a><a href="#g2">2. Before the live</a><a href="#g3">3. Every hour on 12.12</a><a href="#g4">4. Read the screen</a><a href="#g5">5. When a signal fires</a><a href="#g6">6. Cancellations</a><a href="#g7">7. After the show</a><a href="#g8">Data rules</a></nav>
+    <div class="stack">
+      <section class="card" id="g1"><div class="card-b"><h3>1. Set up once</h3><ol class="steps">
+        <li><b>Open Plan settings</b> (left panel, Live day). Defaults are the deck values: USD 1M, 08:00–23:00, resets at 08:00, 13:00, 18:00, 5.1M views/h, 1.27 orders per 1,000 views, AOV $10.30.</li>
+        <li><b>Do not tune the pass mark.</b> It is always target ÷ show hours = $66,667 per hour. Change the target or hours only if the plan itself changes.</li>
+        <li><b>Download the template</b> if you will import from Excel instead of typing.</li>
+      </ol></div></section>
+      <section class="card" id="g2"><div class="card-b"><h3>2. Before the live (63-day runway tab)</h3><ol class="steps">
+        <li><b>Set "Status as of"</b> to today. The current phase gets a green outline.</li>
+        <li><b>Fill each phase's warning-signal inputs</b> when the data arrives: signatures by 23 Oct, stock units by 6 Nov, 11.11 results, weekly teaser views, 5 Dec mismatches.</li>
+        <li><b>Tick each control</b> as it is done. Ticks are your evidence for the review.</li>
+        <li><b>On 14 Nov, read the go / no-go panel.</b> 11.11 GMV ÷ 11.11 hours ≥ $68,000 keeps Creator B, otherwise switch to Creator E.</li>
+        <li><b>Enter 11.11 cancelled GMV</b> in the Prove phase. It becomes the live-day cancellation benchmark.</li>
+      </ol></div></section>
+      <section class="card" id="g3"><div class="card-b"><h3>3. Every hour on 12.12</h3><ol class="steps">
+        <li><b>At :00, read the TikTok Shop LIVE dashboard</b> and copy the cumulative figures for the hour just ended: GMV, orders, views, and cancelled GMV if shown.</li>
+        <li><b>Pick "Hour ending"</b> (it moves to the next empty hour by itself), type the numbers, press Save hour or Enter.</li>
+        <li><b>Enter every hour.</b> If you skip one, the next entry covers two hours and shows as Unknown, because the 2-hour rule cannot be checked.</li>
+        <li><b>Typo?</b> Re-save the same hour to overwrite it, or delete it in the list.</li>
+      </ol></div></section>
+      <section class="card" id="g4"><div class="card-b"><h3>4. Read the screen, top to bottom</h3><dl class="kv">
+        <dt>Status banner</dt><dd>On pace (last hour passed) · Watch (1 miss) · Act now (2 misses in a row) · Fix data · Target met.</dd>
+        <dt>KPI strip</dt><dd>Ordered GMV, gap to the straight-line plan, hours passed, cancel share and net GMV, and the catch-up rate still needed.</dd>
+        <dt>Hour by hour</dt><dd>15 cells by shift. Green = hour ≥ $66,667, red = below, grey = pending or unknown. The live shift is outlined.</dd>
+        <dt>Next move</dt><dd>The pre-agreed action and its owner. Nothing here is generated: it is the deck's Q3 or Q4 wording.</dd>
+        <dt>Three drivers</dt><dd>Which of views, conversion or AOV pulled the last hour below target. The weakest one gets its Q3 action.</dd>
+      </dl></div></section>
+      <section class="card" id="g5"><div class="card-b"><h3>5. When a signal fires</h3><ol class="steps">
+        <li><b>Watch (1 of 2):</b> fix the weakest driver this hour and get the shift reset ready.</li>
+        <li><b>Act now (2 in a row):</b> bring the next shift reset forward: fresh hero deal (Creator B, Brand rep), ad top-up (TTS Ops), co-host swap (Creator B).</li>
+        <li><b>Log it.</b> In the Decision log, enter the time, owner and what was done. The next hours show whether it worked.</li>
+        <li><b>Do not stack new ideas mid-live.</b> If the listed action is not enough, the campaign lead decides, and that decision is logged too.</li>
+      </ol></div></section>
+      <section class="card" id="g6"><div class="card-b"><h3>6. Cancellations</h3><ol class="steps">
+        <li><b>Why track them:</b> headline livestream GMV usually counts every order placed. The reported 100 billion VND Quyền Leo Daily session was "total revenue from orders generated during the live, including cancelled and returned orders" (<a href="https://congthuong.vn/an-so-phien-livestream-100-ty-dong-nguoi-trong-nghe-boc-ty-le-huy-don-318460.html" target="_blank" rel="noopener">Công Thương, 2024</a>).</li>
+        <li><b>What the pass mark uses:</b> ordered GMV, the same basis as the case target. Net GMV is shown next to it so nobody overstates the result.</li>
+        <li><b>Benchmark:</b> the 11.11 rehearsal cancel share. Above it shows "Above 11.11". With no 11.11 figure, the tool tracks without colour. The ~30% in the article is one founder's illustrative estimate, not a measured rate, so it is not used as a threshold.</li>
+        <li><b>Response when above 11.11</b> (our rule, from the reason given in the article: buyers cancel and reorder when a better price appears): drop deals on new hero SKUs rather than cutting the price of a SKU already sold earlier in the live, and confirm size and shade in the consult.</li>
+      </ol></div></section>
+      <section class="card" id="g7"><div class="card-b"><h3>7. After the show</h3><ol class="steps">
+        <li><b>Export Excel</b> (Hourly log card). Sheets: hourly results, decision log, runway status, settings.</li>
+        <li><b>On 13 Dec, re-enter the 23:00 cancelled GMV</b> once late cancellations settle, then export again for the final net figure.</li>
+        <li><b>Review:</b> which hours missed, which driver was weakest, which logged actions were followed by a pass.</li>
+      </ol></div></section>
+      <section class="card" id="g8"><div class="card-b"><h3>Data rules</h3><ul class="list">
+        <li>Missing values are never set to zero. Blank cancelled GMV = not tracked for that hour.</li>
+        <li>Counters must not go down, and cancelled GMV cannot exceed ordered GMV. Otherwise the tool shows Fix data and blocks actions.</li>
+        <li>The downloaded HTML file saves data in this browser between refreshes. Use one device and one browser on the day.</li>
+        <li>"Load demo" fills seven made-up hours for training. Clear the day before going live.</li>
+      </ul></div></section>
+    </div>
+  </div>
+</section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id), fin=Number.isFinite;
+const DEF={target:1000000,start:'08:00',end:'23:00',shifts:'08:00,13:00,18:00',vph:5100000,opk:1.27,aov:10.30};
+const KEY='tt1212_v2';
+const MEMSTORE={_:{},getItem(k){return this._[k]??null},setItem(k,v){this._[k]=String(v)},clear(){this._={}}};
+const store={get(k,d){try{const v=MEMSTORE.getItem(KEY+'_'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{MEMSTORE.setItem(KEY+'_'+k,JSON.stringify(v))}catch(e){}}};
+let CFG=Object.assign({},DEF,store.get('cfg',{}));
+let SN=store.get('snaps',[]);
+let LOG=store.get('log',[]);
+let GATES=store.get('gates',{});
+
+/* ---------- helpers ---------- */
+const tm=s=>{const m=/^(\d{1,2}):(\d{2})$/.exec(String(s??'').trim());return m&&+m[1]<=24&&+m[2]<60?+m[1]*60+ +m[2]:NaN};
+const hm=t=>String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');
+const num=s=>{if(s===null||s===undefined)return NaN;const t=String(s).replace(/[,$\s]/g,'');if(t==='')return NaN;const v=Number(t);return fin(v)?v:NaN};
+const f=(v,d=0)=>fin(v)?v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}):'unknown';
+const usd=(v,d=0)=>fin(v)?(v<0?'−$':'$')+f(Math.abs(v),d):'unknown';
+const K=v=>!fin(v)?'–':Math.abs(v)>=1e6?'$'+(v/1e6).toFixed(2)+'M':'$'+(v/1e3).toFixed(1)+'K';
+const M=v=>fin(v)?(v/1e6).toFixed(2)+'M':'unknown';
+const pct=(v,d=0)=>fin(v)?f(v*100,d)+'%':'unknown';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const toast=t=>{const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove('on'),1800)};
+
+function cfg(){
+  const c={target:+CFG.target,s:tm(CFG.start),e:tm(CFG.end),vph:+CFG.vph,opk:+CFG.opk,aov:+CFG.aov};
+  c.H=(c.e-c.s)/60;
+  c.ok=[c.target,c.vph,c.opk,c.aov].every(x=>fin(x)&&x>0)&&fin(c.s)&&fin(c.e)&&c.e>c.s&&Number.isInteger(c.H);
+  c.bar=c.ok?c.target/c.H:NaN;
+  c.shifts=String(CFG.shifts).split(/[,\s]+/).map(tm).filter(x=>fin(x)&&x>=c.s&&x<c.e).sort((a,b)=>a-b);
+  if(!c.shifts.length||c.shifts[0]!==c.s)c.shifts.unshift(c.s);
+  return c;
+}
+
+/* ---------- core calculation (deterministic) ---------- */
+function compute(){
+  const c=cfg(),o={c,win:[],issues:[]};
+  if(!c.ok){o.issues.push('Plan settings incomplete or show length is not a whole number of hours.');return o}
+  const P=SN.map(p=>({...p,m:tm(p.t)})).filter(p=>fin(p.m)).sort((a,b)=>a.m-b.m);
+  let prev={m:c.s,g:0,o:0,v:0,k:0};
+  P.forEach(p=>{
+    const w={t:p.t,end:p.m,startM:prev.m,hours:(p.m-prev.m)/60,cg:p.g,co:p.o,cv:p.v,ck:num(p.k),flags:[]};
+    if(fin(w.ck)){if(w.ck>p.g)w.flags.push('cancelled GMV above ordered GMV');const pk=num(prev.k);if(fin(pk)&&w.ck<pk)w.flags.push('cancelled GMV went down');w.k=fin(pk)?w.ck-pk:NaN;w.cs=p.g>0?w.ck/p.g:NaN}
+    w.g=p.g-prev.g;w.o=p.o-prev.o;w.v=p.v-prev.v;
+    if(p.m%60!==0)w.flags.push('not on the hour');
+    if(p.m<=c.s||p.m>c.e)w.flags.push('outside show hours');
+    if(w.g<0||w.o<0||w.v<0)w.flags.push('a counter went down');
+    if(w.flags.length){w.s='err'}
+    else if(w.hours!==1){w.s='gap';w.flags.push(`covers ${f(w.hours)} hours: enter each hour`)}
+    else{
+      w.s=w.g>=c.bar?'pass':'miss';
+      w.vph=w.v;w.opk=w.v>0?w.o/w.v*1000:NaN;w.aov=w.o>0?w.g/w.o:NaN;
+      w.r={views:w.vph/c.vph,conv:w.opk/(c.opk),aov:w.aov/c.aov};
+      const rs=Object.entries(w.r).filter(([,v])=>fin(v));
+      w.weak=rs.length===3?rs.sort((a,b)=>a[1]-b[1])[0][0]:null;
+    }
+    w.plan=c.target*(p.m-c.s)/(c.H*60);
+    o.win.push(w);prev=p;
+  });
+  o.win.forEach(w=>{if(w.s==='err')o.issues.push(`${w.t}: ${w.flags.join(', ')}.`)});
+  // streak of consecutive verified misses, newest first
+  let k=0;for(let i=o.win.length-1;i>=0;i--){if(o.win[i].s==='miss')k++;else break}
+  o.streak=k;
+  o.L=o.win[o.win.length-1]||null;
+  o.lastHour=[...o.win].reverse().find(w=>w.s==='pass'||w.s==='miss')||null;
+  if(o.L&&o.L.s!=='err'){
+    const L=o.L;o.cum=L.cg;o.plan=L.plan;o.pace=o.plan>0?o.cum/o.plan:NaN;
+    o.rem=Math.max(0,c.target-o.cum);o.remH=(c.e-L.end)/60;o.catch=o.remH>0?o.rem/o.remH:NaN;
+    o.passN=o.win.filter(w=>w.s==='pass').length;o.missN=o.win.filter(w=>w.s==='miss').length;
+    o.ck=L.ck;o.cs=L.cs;o.net=fin(L.ck)?L.cg-L.ck:NaN;
+  }
+  const bg=num(G('p_gmv')),bk=num(G('p_canc'));o.cb=fin(bg)&&bg>0&&fin(bk)?bk/bg:NaN;
+  o.cst=!fin(o.cs)?'u':!fin(o.cb)?'o':o.cs<=o.cb?'g':'a';
+  return o;
+}
+
+/* ---------- deck actions ---------- */
+const DRV={
+  views:{name:'Traffic',unit:'Views per hour',act:'Re-announce the 12.12 schedule and tease the next hidden deal; TTS tops up ads.',who:'Creator B · TTS Ops',ref:'Q3 steps 1–2'},
+  conv:{name:'Conversion',unit:'Orders per 1,000 views',act:'Consult on size, colour and shade; ask viewers to pre-add before the drop; show the free-shipping voucher.',who:'Creator B · Brand rep',ref:'Q3 steps 3–5'},
+  aov:{name:'Order value',unit:'AOV',act:'Signal the next deal in the other category; ask for several pre-adds; state the spend-threshold voucher.',who:'Creator B · Brand rep',ref:'Q3 steps 3–5'}
+};
+
+function shiftOf(c,m){let idx=0;c.shifts.forEach((s,i)=>{if(m>=s)idx=i});return idx}
+
+/* ---------- render: live ---------- */
+function render(){
+  const o=compute(),c=o.c;
+  // hour select
+  const sel=$('in-t'),cur=sel.value;
+  if(c.ok){const opts=[];for(let h=1;h<=c.H;h++)opts.push(hm(c.s+h*60));
+    const done=new Set(SN.map(p=>p.t));
+    sel.innerHTML=opts.map(t=>`<option ${done.has(t)?'':''}>${t}</option>`).join('');
+    const nextOpen=opts.find(t=>!done.has(t));sel.value=opts.includes(cur)&&!done.has(cur)?cur:(nextOpen||opts[opts.length-1]);}
+  $('bar-meta').textContent=c.ok?`Pass mark ${usd(c.bar)} per hour = ${usd(c.target)} ÷ ${c.H} h`:'Check settings';
+  $('s-check').innerHTML=c.ok?`Driver targets give ${usd(c.vph*c.opk*c.aov/1000)} per hour vs the ${usd(c.bar)} bar.`:'';
+
+  // snapshot list
+  $('snaps').innerHTML=SN.length?`<table class="snap-list" style="margin-top:10px"><tr><th>Hour</th><th>GMV</th><th></th></tr>${[...SN].sort((a,b)=>tm(a.t)-tm(b.t)).map(p=>`<tr><td>${p.t}</td><td>${K(p.g)}</td><td><button class="btn ghost sm" data-del="${esc(p.t)}" aria-label="Delete ${esc(p.t)}">Delete</button></td></tr>`).join('')}</table>`:'';
+
+  // banner
+  const B=$('banner'),pill=$('b-pill'),hl=$('b-hl'),sl=$('b-sl');
+  let s='u',word='No data',head='Enter the first hour at 09:00 to start tracking.',sub=c.ok?`Every hour must pass the fixed bar of ${usd(c.bar)} (${usd(c.target)} ÷ ${c.H} hours).`:'Fix plan settings first.';
+  if(o.issues.length){s='u';word='Fix data';head='Data check failed. No action until fixed.';sub=o.issues.join(' ')}
+  else if(o.L){
+    if(o.cum>=c.target){s='g';word='Target met';head=`${usd(o.cum)} ordered. Target reached at ${o.L.t}.`;sub='Keep running the show as planned to 23:00.'}
+    else if(o.L.s==='gap'){s='u';word='Unknown';head=`Hour ending ${o.L.t} covers more than one hour.`;sub='Enter each hour separately so the 2-hour rule can be checked.'}
+    else if(o.streak>=2){s='r';word='Act now';head=`Warning signal: ${o.streak} hours in a row below ${K(c.bar)}.`;sub='Deck Q4 live-day control: bring the shift reset forward now.'}
+    else if(o.streak===1){s='a';word='Watch';head=`Hour ending ${o.L.t} missed the bar: ${K(o.L.g)} vs ${K(c.bar)}.`;sub='One more miss fires the deck warning signal. Fix the weakest driver this hour.'}
+    else{s='g';word='On pace';head=`Hour ending ${o.L.t} passed: ${K(o.L.g)} vs ${K(c.bar)}.`;sub=`${o.passN} of ${o.passN+o.missN} hours passed so far.`}
+  }
+  B.dataset.s=s;pill.dataset.s=s;pill.lastElementChild.textContent=word;hl.textContent=head;sl.textContent=sub;
+  const st=Math.min(o.streak||0,2);
+  $('b-streak').innerHTML=`<span>Misses in a row</span><b class="${st>=1?(st>=2?'on':'one'):''}"></b><b class="${st>=2?'on':''}"></b><span>${o.streak||0} / 2</span>`;
+
+  // KPIs
+  const kp=(l,v,d,cls='')=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="d ${cls}">${d}</div></div>`;
+  if(o.L&&!o.issues.length){
+    const gap=o.cum-o.plan;
+    $('kpis').innerHTML=
+      kp('Ordered GMV',K(o.cum),`${pct(o.cum/c.target)} of ${K(c.target)}`)+
+      kp('vs straight-line plan',(gap>=0?'+':'−')+K(Math.abs(gap)).slice(0),`plan ${K(o.plan)} by ${o.L.t}`,gap>=0?'g':'r')+
+      kp('Hours passed',`${o.passN} / ${o.passN+o.missN}`,`${c.H-(o.L.end-c.s)/60} hours left of ${c.H}`)+
+      kp('Cancel share',fin(o.cs)?pct(o.cs,1):'–',fin(o.cs)?`net ${K(o.net)}${fin(o.cb)?` · 11.11 ${pct(o.cb,1)}`:''}`:'not entered',o.cst==='a'?'a':o.cst==='g'?'g':'')+
+      kp('Needed per remaining hour',o.rem<=0?'Done':K(o.catch),o.rem<=0?'target reached':`${K(o.rem)} left · bar stays ${K(c.bar)}`,o.rem>0&&o.catch>c.bar?'a':'');
+  } else {
+    $('kpis').innerHTML=kp('Ordered GMV','–','of '+K(c.target))+kp('vs straight-line plan','–','')+kp('Hours passed','–','of '+(c.H||'–'))+kp('Cancel share','–','optional input')+kp('Needed per remaining hour',c.ok?K(c.bar):'–','fixed bar');
+  }
+
+  // hour grid by shift
+  if(c.ok){
+    const byEnd={};o.win.forEach(w=>{byEnd[w.end]=w});
+    const covered=new Set();o.win.forEach(w=>{if(w.s==='gap')for(let m=w.startM+60;m<=w.end;m+=60)covered.add(m)});
+    const lastEnd=o.L?o.L.end:c.s,curShift=shiftOf(c,Math.min(lastEnd,c.e-1));
+    const groups=c.shifts.map((ss,i)=>({i,ss,se:c.shifts[i+1]||c.e}));
+    $('shifts').innerHTML=groups.map(g=>{
+      const cells=[];for(let m=g.ss;m<g.se;m+=60){const end=m+60,w=byEnd[end];let ds='p',gv='–',stt='Pending',bw=0;
+        if(w&&w.s==='pass'){ds='g';gv=K(w.g);stt='Pass';bw=Math.min(1,w.g/c.bar)}
+        else if(w&&w.s==='miss'){ds='r';gv=K(w.g);stt='Miss';bw=Math.min(1,w.g/c.bar)}
+        else if(covered.has(end)||(w&&w.s==='err')){ds='u';gv='?';stt='Unknown'}
+        cells.push(`<div class="hour" data-s="${ds}" title="${hm(m)}–${hm(end)}"><span class="hn">${hm(m)}</span><span class="gv">${gv}</span><span class="st">${stt}</span><span class="bar" style="width:${bw*100}%"></span></div>`)}
+      return `<div class="shift ${o.L&&g.i===curShift&&lastEnd<c.e?'now':''}"><div class="shift-h"><b>Shift ${g.i+1} · ${hm(g.ss)}–${hm(g.se)}</b><span>${(g.se-g.ss)/60} h</span></div><div class="hours" style="grid-template-columns:repeat(${Math.max(1,(g.se-g.ss)/60)},minmax(0,1fr))">${cells.join('')}</div><p class="shift-f">Opens with a fresh hero deal, ad top-up and co-host swap.</p></div>`}).join('');
+  } else $('shifts').innerHTML='<p class="empty">Check plan settings.</p>';
+
+  chart(o);
+  nextMove(o);
+  drivers(o);
+  cancRender(o);
+  table(o);
+  $('hint').hidden=SN.length>0;
+  logRender();
+}
+
+function chart(o){
+  const c=o.c,sv=$('chart');if(!c.ok){sv.innerHTML='';return}
+  const W=720,H=270,L=56,R=24,T=14,Bm=28;
+  const pts=o.win.filter(w=>w.s!=='err');
+  const ym=Math.max(c.target*1.08,...pts.map(w=>w.cg));
+  const X=m=>L+(m-c.s)/(c.e-c.s)*(W-L-R),Y=v=>H-Bm-v/ym*(H-T-Bm);
+  let s='';
+  for(let q=0;q<=4;q++){const v=c.target*q/4;s+=`<line class="gl" x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${L-8}" y="${Y(v)+4}" text-anchor="end">${q?K(v).replace('.0K','K'):'$0'}</text>`}
+  for(let h=0;h<=c.H;h++){const m=c.s+h*60;if(h%(c.H>12?3:2)===0||h===c.H)s+=`<text class="ax" x="${X(m)}" y="${H-8}" text-anchor="middle">${hm(m)}</text>`}
+  s+=`<line x1="${L}" x2="${W-R}" y1="${Y(c.target)}" y2="${Y(c.target)}" stroke="var(--r)" stroke-width="1.5"/>`;
+  s+=`<line x1="${X(c.s)}" y1="${Y(0)}" x2="${X(c.e)}" y2="${Y(c.target)}" stroke="var(--mut)" stroke-width="1.8" stroke-dasharray="6 5"/>`;
+  if(pts.length){
+    s+=`<path d="M${X(c.s)} ${Y(0)}${pts.map(w=>`L${X(w.end)} ${Y(w.cg)}`).join('')}" fill="none" stroke="var(--acc)" stroke-width="3" stroke-linejoin="round"/>`;
+    s+=pts.map(w=>`<circle cx="${X(w.end)}" cy="${Y(w.cg)}" r="4" fill="${w.s==='miss'?'var(--r)':w.s==='gap'?'var(--u)':'var(--acc)'}" stroke="var(--surface)" stroke-width="1.5"><title>${w.t}: ${usd(w.cg)} (plan ${usd(w.plan)})</title></circle>`).join('');
+  }
+  sv.innerHTML=s;
+}
+
+function nextMove(o){
+  const c=o.c,el=$('next');
+  const step=(i,what,who)=>`<div class="step"><span class="n">${i}</span><div><div class="what">${what}</div><div class="who">${who}</div></div></div>`;
+  if(o.issues.length){el.innerHTML=`<div class="rulebox" data-s="r"><b>Fix data first.</b> ${esc(o.issues.join(' '))}</div><p class="cap">Decisions are blocked while counters are invalid.</p>`;return}
+  if(!o.L){el.innerHTML=`<div class="rulebox">Rule (deck Q4, live day): hourly GMV below the ${K(c.bar)} pace for 2 hours in a row → run the shift reset early.</div><p class="cap">Run of show: ${c.shifts.map(hm).join(', ')} resets as planned.</p>`;return}
+  if(o.cum>=c.target){el.innerHTML=`<div class="rulebox" data-s="g"><b>Target reached.</b></div>${step(1,'Keep the run of show to 23:00; no extra spend needed.','Creator B · Brand rep')}${step(2,'Keep logging every hour for the 13 Dec review.','TTS Ops')}`;return}
+  if(o.L.s==='gap'){el.innerHTML=`<div class="rulebox">Last entry covers more than one hour, so the 2-hour rule cannot be checked.</div>${step(1,'Enter each missing hour from the dashboard.','TTS Ops')}`;return}
+  const w=o.lastHour,d=w&&w.weak?DRV[w.weak]:null;
+  const nextReset=c.shifts.find(m=>m>o.L.end);
+  let html='';
+  if(o.streak>=2){
+    html+=`<div class="rulebox" data-s="r"><b>Warning signal fired.</b> ${o.streak} hours in a row below ${K(c.bar)}. Apply the deck's live-day control now${nextReset?`, instead of waiting for the ${hm(nextReset)} reset`:''}.</div>`;
+    html+=step(1,'Drop a fresh hero deal.','Creator B · Brand rep');
+    html+=step(2,'Top up ads.','TTS Ops');
+    html+=step(3,'Swap the co-host.','Creator B');
+    if(d)html+=step(4,`Weakest driver: ${d.name.toLowerCase()} at ${pct(w.r[w.weak])} of target. ${d.act}`,`${d.who} · ${d.ref}`);
+  } else if(o.streak===1){
+    html+=`<div class="rulebox" data-s="a"><b>1 of 2.</b> One more hour below ${K(c.bar)} fires the warning signal.</div>`;
+    if(d)html+=step(1,`Fix ${d.name.toLowerCase()} (${pct(w.r[w.weak])} of target). ${d.act}`,`${d.who} · ${d.ref}`);
+    html+=step(d?2:1,'Prepare the shift reset (hero deal, ads, co-host) in case the next hour misses.','TTS Ops');
+  } else {
+    html+=`<div class="rulebox" data-s="g"><b>On pace.</b> Hold the run of show.</div>`;
+    html+=step(1,nextReset?`Next planned reset at ${hm(nextReset)}: fresh hero deal, ad top-up, co-host swap.`:'Final shift: hold the plan to 23:00.','Creator B · Brand rep · TTS Ops');
+    if(d&&w.r[w.weak]<1)html+=step(2,`Watch ${d.name.toLowerCase()}: ${pct(w.r[w.weak])} of target even though the hour passed.`,`${d.who}`);
+  }
+  if(o.cst==='a')html+=`<div class="step"><span class="n">+</span><div><div class="what">Cancel share ${pct(o.cs,1)} is above the 11.11 level (${pct(o.cb,1)}). Drop deals on new hero SKUs, not lower prices on SKUs already sold.</div><div class="who">Brand rep · Creator B · tool rule</div></div></div>`;
+  html+=`<p class="cap" style="margin-top:10px">Pre-agreed responses only. Log what was done below.</p>`;
+  el.innerHTML=html;
+}
+
+function drivers(o){
+  const c=o.c,w=o.lastHour,el=$('drivers');
+  $('drv-meta').textContent=w?`hour ending ${w.t}`:'no completed hour yet';
+  const items=[['views',w?.vph,c.vph,v=>M(v)],['conv',w?.opk,c.opk,v=>f(v,2)],['aov',w?.aov,c.aov,v=>usd(v,2)]];
+  el.innerHTML=items.map(([k,v,t,fmt])=>{const r=fin(v)?v/t:NaN,s=!fin(r)?'u':r>=1?'g':'r',d=DRV[k],isW=w&&w.weak===k&&r<1;
+    return `<div class="drv" data-s="${s}"><div class="top-r"><span class="nm">${d.name} · ${d.unit}</span>${fin(r)?`<span class="pill" data-s="${s}" style="font-size:11px;padding:2px 8px">${r>=1?'At target':isW?'Weakest':'Below'}</span>`:''}</div>
+    <div class="v">${fin(v)?fmt(v):'–'}</div><div class="t">target ${fmt(t)} · ${fin(r)?pct(r)+' of target':'no data'}</div>
+    <div class="meter"><span style="width:${fin(r)?Math.min(100,r/1.3*100):0}%"></span><em style="left:${100/1.3}%"></em></div>
+    <div class="act">${fin(r)&&r<1?d.act:'&nbsp;'}</div></div>`}).join('');
+}
+
+function cancRender(o){
+  const el=$('canc'),lab={u:['u','Not entered'],o:['o','Tracking · no 11.11 benchmark'],g:['g','At or below 11.11'],a:['a','Above 11.11']}[o.cst||'u'];
+  const cell=(l,v,d='')=>`<div><div class="cap">${l}</div><div class="v">${v}</div>${d?`<div class="cap">${d}</div>`:''}</div>`;
+  const act=o.cst==='a'?'Drop deals on new hero SKUs instead of cutting the price of a SKU already sold this live; confirm size and shade in the consult. <span class="cap">Brand rep · Creator B · tool rule</span>':
+    o.cst==='o'?'Enter 11.11 cancelled GMV in the Runway tab (Prove phase) to set the benchmark.':
+    o.cst==='g'?'No action. Keep logging cancelled GMV every hour.':'Add cumulative cancelled GMV with each hour if the dashboard shows it.';
+  el.innerHTML=cell('Cancelled GMV',fin(o.ck)?K(o.ck):'–',o.L?`to ${o.L.t}`:'')+cell('Cancel share',fin(o.cs)?pct(o.cs,1):'–','of ordered GMV')+
+    cell('Net GMV',fin(o.net)?K(o.net):'–',fin(o.net)?`${pct(o.net/o.c.target)} of USD 1M`:'')+cell('11.11 benchmark',fin(o.cb)?pct(o.cb,1):'–',fin(o.cb)?'rehearsal share':'not set')+
+    `<div><div class="cap">Status</div><div style="margin:4px 0 6px"><span class="pill" data-s="${lab[0]}"><i></i>${lab[1]}</span></div><div style="font-size:12.5px;color:var(--ink-2)">${act}</div></div>`;
+}
+
+function table(o){
+  const c=o.c;
+  if(!o.win.length){$('table').innerHTML='<p class="empty">No hours logged yet.</p>';return}
+  const lab={pass:['g','Pass'],miss:['r','Miss'],gap:['u','Unknown'],err:['u','Data error']};
+  let run=0;
+  $('table').innerHTML=`<table><thead><tr><th>Hour</th><th>GMV in hour</th><th>vs bar</th><th class="l">Result</th><th>Views</th><th>Orders / 1k views</th><th>AOV</th><th class="l">Weakest</th><th>Cumulative</th><th>Plan</th><th>Cancelled</th><th>Cancel share</th></tr></thead><tbody>${o.win.map(w=>{
+    run=w.s==='miss'?run+1:0;const [cl,tx]=lab[w.s];
+    return `<tr><td>${hm(w.startM)}–${w.t}</td><td>${w.s==='err'?'–':usd(w.g)}</td><td>${w.s==='pass'||w.s==='miss'?pct(w.g/c.bar):'–'}</td><td class="l"><span class="pill" data-s="${cl}">${tx}${w.s==='miss'&&run>=2?' · signal':''}</span></td><td>${w.vph?M(w.vph):'–'}</td><td>${fin(w.opk)?f(w.opk,2):'–'}</td><td>${fin(w.aov)?usd(w.aov,2):'–'}</td><td class="l">${w.weak?DRV[w.weak].name:'–'}</td><td>${usd(w.cg)}</td><td>${usd(w.plan)}</td><td>${fin(w.ck)?usd(w.ck):'–'}</td><td>${fin(w.cs)?pct(w.cs,1):'–'}</td></tr>`}).join('')}</tbody></table>`;
+}
+
+function logRender(){
+  $('log').innerHTML=LOG.length?`<div class="tbl-wrap"><table><thead><tr><th>Time</th><th class="l">Owner</th><th class="l">Action</th><th class="l">Status at log</th><th></th></tr></thead><tbody>${LOG.map((r,i)=>`<tr><td>${esc(r.t)}</td><td class="l">${esc(r.o)}</td><td class="l" style="white-space:normal">${esc(r.a)}</td><td class="l">${esc(r.s)}</td><td><button class="btn ghost sm" data-dl="${i}">Delete</button></td></tr>`).join('')}</tbody></table></div>`:'<p class="cap">No actions logged yet.</p>';
+}
+
+/* ---------- runway ---------- */
+const PH=[
+ {id:'commit',n:1,name:'Commit',from:'2026-10-10',to:'2026-10-23',tm:'T-63 to T-50',
+  risk:'Creator does not commit to a 15-hour day, our biggest lever for views.',
+  signal:'Agreement or shift plan still unsigned by 23 Oct.',due:'2026-10-23',
+  control:['Get written commitment first.','Brief Creator E as standby from day one.'],owner:'Creator B · TTS Ops'},
+ {id:'build',n:2,name:'Build',from:'2026-10-24',to:'2026-11-06',tm:'T-49 to T-36',
+  risk:'Hero brands and stock not secured, which caps GMV before traffic matters.',
+  signal:'Under 70% of target stock committed by 6 Nov (proposed threshold).',due:'2026-11-06',
+  control:['Lock hero brands before bundles.','Two backups per category.','Weekly stock check.'],owner:'Brand rep · TTS Ops'},
+ {id:'prove',n:3,name:'Prove',from:'2026-11-07',to:'2026-11-13',tm:'T-35 to T-29',
+  risk:'11.11 rehearsal falls short of plan, leaving too little time to fix the playbook.',
+  signal:'11.11 GPH under USD 68K, or 12.12 teaser sign-ups below plan.',due:'2026-11-14',
+  control:['Go / no-go on 14 Nov: 11.11 GPH at least USD 68K, otherwise switch to Creator E.'],owner:'TTS Ops'},
+ {id:'lock',n:4,name:'Lock',from:'2026-11-14',to:'2026-12-11',tm:'T-28 to T-1',
+  risk:'Audience does not build, or stock, price and voucher errors are found too late.',
+  signal:'Weekly teaser views below the ramp plan, or the 5 Dec dress rehearsal shows a stock or price mismatch.',due:'2026-12-11',
+  control:['Shift ad budget weekly.','Swap teaser creative.','Final checklist with owners and buffer stock (9–11 Dec).'],owner:'TTS Ops · Creator B · Brand rep'},
+ {id:'live',n:5,name:'Live day',from:'2026-12-12',to:'2026-12-12',tm:'T0 · 08:00–23:00',
+  risk:'GPH decays as the session runs long: fading traffic and host fatigue mean fewer orders per hour.',
+  signal:'Hourly GMV below the USD 67K pace ($66,667) for 2 hours in a row.',due:'2026-12-12',
+  control:['Run shifts of about 5 hours, each with a fresh hero deal, ad top-up and co-host swap.'],owner:'Creator B · Brand rep · TTS Ops'}
+];
+const G=(k,d='')=>GATES[k]??d;
+const setG=(k,v)=>{GATES[k]=v;store.set('gates',GATES)};
+const D=s=>new Date(s+'T00:00:00');
+const localISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const dayDiff=(a,b)=>Math.round((D(b)-D(a))/864e5);
+const fmtD=s=>D(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+
+function phaseEval(p,asof){
+  const after=asof>p.due, left=dayDiff(asof,p.due);
+  const open=`Open · due ${fmtD(p.due)}${left>=0?` (${left} day${left===1?'':'s'})`:''}`;
+  if(p.id==='commit'){const ok=G('c_agree',false)&&G('c_shift',false);
+    return ok?['g','Clear: both signed']:after?['r','Signal fired: unsigned after 23 Oct']:['o',open]}
+  if(p.id==='build'){const t=num(G('b_target')),cm=num(G('b_comm'));const r=fin(t)&&t>0&&fin(cm)?cm/t:NaN;
+    if(!fin(r))return after?['u','Unknown: enter stock units']:['o',open];
+    return r>=.7?['g',`Clear: ${pct(r)} committed`]:after?['r',`Signal fired: ${pct(r)} committed`]:['o',`${pct(r)} committed · needs 70% by 6 Nov`]}
+  if(p.id==='prove'){const g=num(G('p_gmv')),h=num(G('p_hrs')),gph=fin(g)&&fin(h)&&h>0?g/h:NaN,su=num(G('p_su')),sp=num(G('p_sp'));
+    const suLow=fin(su)&&fin(sp)&&su<sp;
+    if(!fin(gph))return after?['u','Unknown: enter 11.11 results']:['o',open];
+    if(gph<68000)return ['r',`Signal fired: 11.11 GPH ${K(gph)}`];
+    if(suLow)return ['r','Signal fired: sign-ups below plan'];
+    return ['g',`Clear: 11.11 GPH ${K(gph)}`]}
+  if(p.id==='lock'){const tv=num(G('l_tv')),tp=num(G('l_tp')),mm=num(G('l_mm'));const fired=[];
+    if(fin(tv)&&fin(tp)&&tv<tp)fired.push('teaser views below ramp');
+    if(fin(mm)&&mm>0)fired.push(`${f(mm)} mismatch${mm>1?'es':''} at dress rehearsal`);
+    if(fired.length)return ['r','Signal fired: '+fired.join(', ')];
+    if(G('l_final',false)&&fin(mm))return ['g','Clear: checks done'];
+    if(fin(tv)&&fin(tp))return ['o','Teaser views on ramp · checks pending'];
+    return after?['u','Unknown: enter checks']:['o',open]}
+  if(p.id==='live'){const o=compute();if(!o.L)return ['o','Open · 12 Dec'];if(o.issues.length)return ['u','Data error'];
+    return o.streak>=2?['r',`Signal fired: ${o.streak} misses in a row`]:o.streak===1?['a','1 of 2 misses']:['g',`Clear: ${o.passN} of ${o.passN+o.missN} hours passed`]}
+}
+
+function inputsFor(p){
+  const inp=(k,l,ph='')=>`<label class="field" style="margin-top:6px">${l}<input data-g="${k}" value="${esc(G(k))}" placeholder="${ph}" inputmode="decimal"></label>`;
+  const ck=(k,l)=>`<label class="chk"><input type="checkbox" data-gc="${k}" ${G(k,false)?'checked':''}>${l}</label>`;
+  if(p.id==='commit')return ck('c_agree','Creator agreement signed')+ck('c_shift','15-hour shift plan and roster signed');
+  if(p.id==='build'){const t=num(G('b_target')),cm=num(G('b_comm')),r=fin(t)&&t>0&&fin(cm)?Math.min(1,cm/t):0;
+    return `<div class="grid2">${inp('b_target','Target units','e.g. 120000')}${inp('b_comm','Committed units','')}</div><div class="progress"><span style="width:${r*100}%"></span><em style="left:70%"></em></div><p class="cap" style="margin-top:4px">Marker = 70%</p>`}
+  if(p.id==='prove')return `<div class="grid2">${inp('p_gmv','11.11 GMV ($)')}${inp('p_hrs','11.11 live hours')}</div>${inp('p_canc','11.11 cancelled GMV ($) · sets live-day cancel benchmark')}<div class="grid2">${inp('p_su','Teaser sign-ups')}${inp('p_sp','Sign-up plan')}</div>`;
+  if(p.id==='lock')return `<div class="grid2">${inp('l_tv','Teaser views, latest week')}${inp('l_tp','Ramp plan, same week')}</div>${inp('l_mm','Stock or price mismatches (5 Dec)','0 if none')}${ck('l_final','Final checks done 9–11 Dec')}`;
+  if(p.id==='live')return `<p class="cap">Fed by the Live day tab.</p><button class="btn ghost sm" data-go="live" style="margin-top:6px">Open Live day</button>`;
+}
+function controlsFor(p){
+  return p.control.map((t,i)=>`<label class="chk"><input type="checkbox" data-gc="ctl_${p.id}_${i}" ${G('ctl_'+p.id+'_'+i,false)?'checked':''}>${t}</label>`).join('');
+}
+
+function renderRunway(focusKey){
+  const asof=$('asof').value||localISO();
+  const curIdx=PH.findIndex(p=>asof>=p.from&&asof<=p.to);
+  const ev=PH.map(p=>phaseEval(p,asof));
+  $('timeline').innerHTML=PH.map((p,i)=>{const [s,t]=ev[i];
+    return `<article class="card phase ${i===curIdx?'now':''}">
+      <div class="ph-top"><div class="row1"><span class="eyebrow">Phase ${p.n}${i===curIdx?' · now':''}</span><span class="pill" data-s="${s}"><i></i>${s==='g'?'Clear':s==='r'?'Signal':s==='a'?'Watch':s==='u'?'Unknown':'Open'}</span></div>
+      <h3>${p.name}</h3><div class="dt">${p.from===p.to?fmtD(p.from):fmtD(p.from)+' – '+fmtD(p.to)} · ${p.tm}</div></div>
+      <div class="ph-sec"><span class="eyebrow">Critical risk</span>${p.risk}</div>
+      <div class="ph-sec sig"><span class="eyebrow">Warning signal</span>${p.signal}${inputsFor(p)}<p class="ph-res" style="color:var(--${s==='o'?'ink-2':s})">${t}</p></div>
+      <div class="ph-sec"><span class="eyebrow">Preventive control · ${p.owner}</span>${controlsFor(p)}</div>
+    </article>`}).join('');
+  // gate
+  const g=num(G('p_gmv')),h=num(G('p_hrs')),gph=fin(g)&&fin(h)&&h>0?g/h:NaN;
+  const gate=$('gate');
+  if(!fin(gph)){gate.dataset.s='u';gate.innerHTML=`<div class="big">Go / no-go · 14 Nov</div><div><p><b>Awaiting 11.11 results.</b> Rule: 11.11 GPH of at least USD 68,000 keeps Creator B; otherwise switch to Creator E.</p><p class="cap">USD 68K is Creator B's case peak GPH of $67,782 (Table 1), rounded. <span class="tag rule">DECK RULE</span></p></div>`}
+  else if(gph>=68000){gate.dataset.s='g';gate.innerHTML=`<div class="big" style="color:var(--g)">GO · Creator B</div><div><p>11.11 GPH ${usd(gph)} = ${usd(g)} ÷ ${f(h,1)} h, at or above USD 68,000.</p><p class="cap">Live-day bar stays ${usd(cfg().bar)} per hour.</p></div>`}
+  else{gate.dataset.s='r';gate.innerHTML=`<div class="big" style="color:var(--r)">NO GO · switch to Creator E</div><div><p>11.11 GPH ${usd(gph)} = ${usd(g)} ÷ ${f(h,1)} h, below USD 68,000.</p><p class="cap">Creator E has been on standby since the Commit phase.</p></div>`}
+  const fired=ev.filter(e=>e[0]==='r').length;
+  $('rw-sum').textContent=`${curIdx>=0?`Now in phase ${curIdx+1}, ${PH[curIdx].name}`:asof<PH[0].from?'Before the runway starts':'After live day'} · ${dayDiff(asof,'2026-12-12')>=0?`T-${dayDiff(asof,'2026-12-12')}`:'post-live'} · ${fired} warning signal${fired===1?'':'s'} fired.`;
+  if(focusKey){const e=document.querySelector(`[data-g="${focusKey}"]`);if(e){e.focus();const v=e.value;e.value='';e.value=v}}
+}
+
+/* ---------- ledger ---------- */
+function renderLedger(){
+  const c=cfg();
+  const rows=[
+    ['USD 1,000,000','case','Ordered GMV target for 12 Dec, from the case brief.'],
+    ['15 h, 08:00–23:00','rule','Deck Q1 and Appendix A: USD 1M ÷ B\'s peak GPH 67,782 = 14.8 h, rounded up to 15.'],
+    [usd(c.bar)+' per hour','der',`Hourly pass mark = ${usd(c.target)} ÷ ${c.H} h. The deck rounds it to USD 67K. Fixed for the whole day.`],
+    ['2 hours in a row','rule','Deck Q4 live-day warning signal. One miss shows "Watch" (1 of 2); it is the same rule, not a new threshold.'],
+    ['Shift reset','rule','Deck Q4 control: shifts of about 5 hours (08:00, 13:00, 18:00), each with a fresh hero deal, ad top-up and co-host swap.'],
+    ['5.1M views per hour','rule','Deck Appendix A target: 98% of B\'s peak 5,185,008 views per hour (Case T1).'],
+    ['1.27 orders per 1,000 views','der','B\'s peak GPM 13.07 ÷ AOV 10.28 (Case T1, T3).'],
+    ['USD 10.30 AOV','der','Order-weighted AOV over B\'s top 3 categories = 0.994 ÷ (0.607/9.9 + 0.376/11.1 + 0.011/7.3) = 10.28 (Case T3); deck rounds to 10.3.'],
+    ['USD 68K go / no-go','rule','Deck Q4 gate on 14 Nov. B\'s peak GPH 67,782 (Case T1), rounded.'],
+    ['70% stock by 6 Nov','rule','Deck Q4 Build signal, marked "proposed threshold".'],
+    ['23 Oct, 6 Nov, 14 Nov, 5 Dec, 9–11 Dec, 13 Dec','rule','Deck Q4 plan dates, written as T-minus days so they move with any campaign day.'],
+    ['Weakest driver','der','(views ÷ 5.1M) × (orders per 1k ÷ 1.27) × (AOV ÷ 10.30) = hour GMV ÷ $66,711, the GMV the three driver targets give (within 0.1% of the bar). The smallest ratio is the binding driver.'],
+    ['Actions','rule','Driver actions are the deck Q3 funnel actions; the 2-hour response is the deck Q4 live-day control.'],
+    ['Cancel share','der','Cumulative cancelled GMV ÷ cumulative ordered GMV. Net GMV = ordered − cancelled. The pass mark stays on ordered GMV, the case target basis.'],
+    ['11.11 cancel benchmark','rule','11.11 cancelled GMV ÷ 11.11 GMV, entered in the Prove phase. Measured on our own rehearsal, not taken from the market.'],
+    ['Headline GMV includes cancels','ext','The reported 100 billion VND Quyền Leo Daily session counted all orders placed, including cancelled and returned ones (<a href="https://congthuong.vn/an-so-phien-livestream-100-ty-dong-nguoi-trong-nghe-boc-ty-le-huy-don-318460.html" target="_blank" rel="noopener">Công Thương, 2024</a>).'],
+    ['~30% (not used)','ext','An industry founder\'s illustrative estimate in the same article; the exact rate is known only to the channel owner. Not a measured rate, so not a threshold.'],
+    ['Cancel response','rule','Tool rule, not yet in the deck: the article says buyers cancel and reorder when a better price appears, so deals drop on new hero SKUs rather than as price cuts on SKUs already sold.']
+  ];
+  const tg={case:'<span class="tag case">CASE</span>',der:'<span class="tag der">DERIVED</span>',rule:'<span class="tag rule">DECK RULE</span>',ext:'<span class="tag case" style="color:#047857;border-color:#A7E3CC;background:#ECFBF4">EXTERNAL</span>'};
+  $('ledger').innerHTML=`<table><thead><tr><th>Number</th><th class="l">Backing</th><th class="l">How it is set</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${tg[r[1]]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table>`;
+}
+
+/* ---------- events ---------- */
+function saveSnaps(){store.set('snaps',SN);render()}
+$('add').onclick=()=>{
+  const t=$('in-t').value,g=num($('in-g').value),o=num($('in-o').value),v=num($('in-v').value),k=num($('in-k').value),m=$('msg');
+  if(![g,o,v].every(x=>fin(x)&&x>=0)){m.textContent='Enter GMV, orders and views. Missing values are not set to zero.';m.className='msg err';return}
+  if(o===0||v===0){m.textContent='Orders and views must be above zero.';m.className='msg err';return}
+  if(fin(k)&&(k<0||k>g)){m.textContent='Cancelled GMV must be between 0 and ordered GMV.';m.className='msg err';return}
+  SN=SN.filter(p=>p.t!==t);SN.push(fin(k)?{t,g,o,v,k}:{t,g,o,v});m.textContent=`Saved hour ending ${t}.`;m.className='msg';
+  ['in-g','in-o','in-v','in-k'].forEach(i=>$(i).value='');saveSnaps();$('in-g').focus();
+};
+['in-g','in-o','in-v','in-k'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')$('add').click()}));
+$('clr').onclick=()=>{if(!SN.length)return;if(!confirm('Clear all hours for the day?'))return;SN=[];saveSnaps();$('msg').textContent='Cleared.'};
+$('snaps').onclick=e=>{const t=e.target.dataset.del;if(t){SN=SN.filter(p=>p.t!==t);saveSnaps()}};
+$('log').onclick=e=>{const i=e.target.dataset.dl;if(i!==undefined){LOG.splice(+i,1);store.set('log',LOG);logRender()}};
+$('lg-add').onclick=()=>{const a=$('lg-a').value.trim();if(!a){toast('Describe the action taken');return}
+  const o=compute(),st=o.issues.length?'Data error':!o.L?'No data':o.streak>=2?'Signal fired':o.streak===1?'1 of 2':'On pace';
+  const now=new Date();LOG.push({t:$('lg-t').value.trim()||hm(now.getHours()*60+now.getMinutes()),o:$('lg-o').value,a,s:st});store.set('log',LOG);$('lg-a').value='';$('lg-t').value='';logRender()};
+
+// settings
+const SF={target:'s-target',start:'s-start',end:'s-end',shifts:'s-shifts',vph:'s-vph',opk:'s-opk',aov:'s-aov'};
+function fillSettings(){Object.entries(SF).forEach(([k,id])=>{$(id).value=CFG[k]})}
+Object.entries(SF).forEach(([k,id])=>$(id).addEventListener('input',()=>{const v=$(id).value;CFG[k]=['start','end','shifts'].includes(k)?v:num(v);store.set('cfg',CFG);render();renderLedger()}));
+$('s-reset').onclick=()=>{CFG=Object.assign({},DEF);store.set('cfg',CFG);fillSettings();render();renderLedger();toast('Deck values restored')};
+
+// import / template / demo
+const xtime=v=>{if(typeof v==='number'&&v>=0&&v<1.0001){const m=Math.round(v*1440);return hm(m)}const s=String(v??'').trim();const t=tm(s);return fin(t)?hm(t):''};
+$('file').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;const im=$('imsg');
+  try{const wb=XLSX.read(await file.arrayBuffer());const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null});
+    const ok=[],bad=[];rows.forEach((r,i)=>{const t=xtime(r.time),g=num(r.cumulative_gmv),o=num(r.cumulative_orders),v=num(r.cumulative_views),k=num(r.cumulative_cancelled_gmv);
+      if(!t){bad.push(`row ${i+2} time`);return}if(![g,o,v].every(x=>fin(x)&&x>=0)){bad.push(`row ${i+2} missing value`);return}
+      if(o===0||v===0){bad.push(`row ${i+2} zero orders or views`);return}if(fin(k)&&(k<0||k>g)){bad.push(`row ${i+2} cancelled GMV`);return}ok.push(fin(k)?{t,g,o,v,k}:{t,g,o,v})});
+    if(!ok.length){im.textContent='No valid rows. '+bad.join(', ');im.className='msg err';return}
+    SN=ok;saveSnaps();im.textContent=`Imported ${ok.length} hours.`+(bad.length?` Skipped: ${bad.join(', ')}.`:'');im.className=bad.length?'msg err':'msg';
+  }catch(err){im.textContent='Import failed. Check the file format.';im.className='msg err'}e.target.value=''});
+$('tpl').onclick=()=>{const c=cfg(),rows=[['time','cumulative_gmv','cumulative_orders','cumulative_views','cumulative_cancelled_gmv']];for(let h=1;h<=c.H;h++)rows.push([hm(c.s+h*60),null,null,null,null]);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'hourly');XLSX.writeFile(wb,'tich-tac-12-12-hourly-template.xlsx')};
+$('demo').onclick=()=>{if(SN.length&&!confirm('Replace current hours with illustrative demo data?'))return;
+  // Illustrative numbers only, not a forecast: [GMV in hour, views in hour (M), AOV]
+  const H=[[71000,5.30,10.4,3900],[74000,5.40,10.5,4800],[69000,5.15,10.3,4500],[62000,5.05,10.0,5600],[70000,5.20,10.4,5200],[63000,4.70,10.4,6300],[60000,4.55,10.5,6600]];
+  let g=0,o=0,v=0,k=0;const c=cfg();SN=H.map((x,i)=>{g+=x[0];o+=Math.round(x[0]/x[2]);v+=Math.round(x[1]*1e6);k+=x[3];return{t:hm(c.s+(i+1)*60),g,o,v,k}});
+  saveSnaps();$('imsg').textContent='Demo loaded: 7 illustrative hours, not a forecast.';$('imsg').className='msg'};
+
+// exports
+function hourlyRows(){const o=compute(),c=o.c;let run=0;return o.win.map(w=>{run=w.s==='miss'?run+1:0;return{
+  hour:`${hm(w.startM)}-${w.t}`,gmv_in_hour:w.s==='err'?'':w.g,pass_mark:Math.round(c.bar),result:w.s,two_hour_signal:w.s==='miss'&&run>=2?'fired':'',
+  views_in_hour:w.vph??'',orders_per_1k_views:fin(w.opk)?+w.opk.toFixed(3):'',aov:fin(w.aov)?+w.aov.toFixed(2):'',weakest_driver:w.weak?DRV[w.weak].name:'',
+  cumulative_gmv:w.cg,cumulative_orders:w.co,cumulative_views:w.cv,plan_cumulative:Math.round(w.plan),cumulative_cancelled_gmv:fin(w.ck)?w.ck:'',cancel_share_pct:fin(w.cs)?+(w.cs*100).toFixed(1):'',net_gmv:fin(w.ck)?w.cg-w.ck:'',notes:w.flags.join('; ')}})}
+$('xlsx').onclick=()=>{if(!SN.length){toast('No hours to export');return}
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(hourlyRows()),'hourly');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(LOG.length?LOG.map(r=>({time:r.t,owner:r.o,action:r.a,status_at_log:r.s})):[{time:'',owner:'',action:'',status_at_log:''}]),'decision_log');
+  const asof=$('asof').value||localISO();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(PH.map(p=>{const [s,t]=phaseEval(p,asof);return{phase:p.name,dates:`${p.from} to ${p.to}`,warning_signal:p.signal,status:t}})),'runway');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(Object.entries(CFG).map(([k,v])=>({setting:k,value:v}))),'settings');
+  XLSX.writeFile(wb,'tich-tac-12-12-session.xlsx');toast('Excel exported')};
+$('json').onclick=()=>{if(!SN.length){toast('No hours to export');return}
+  const blob=new Blob([JSON.stringify({settings:CFG,hours:hourlyRows(),snapshots:SN,decision_log:LOG,gates:GATES},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tich-tac-12-12-session.json';a.click();toast('JSON exported')};
+$('copy').onclick=()=>{const o=compute(),c=o.c;if(!o.L||o.issues.length){toast('Nothing valid to copy yet');return}
+  const w=o.lastHour,d=w&&w.weak?DRV[w.weak]:null;
+  const st=o.cum>=c.target?'TARGET MET':o.streak>=2?'ACT NOW: 2-hour signal fired':o.streak===1?'WATCH: 1 of 2':'ON PACE';
+  const txt=`12.12 · hour ending ${o.L.t} · ${st}
+Hour GMV ${usd(o.L.g)} vs bar ${usd(c.bar)}
+Cumulative ${usd(o.cum)} vs plan ${usd(o.plan)} (${o.cum-o.plan>=0?'+':''}${usd(o.cum-o.plan)})
+Cancelled ${fin(o.ck)?usd(o.ck)+' ('+pct(o.cs,1)+')':'not entered'} · net ${fin(o.net)?usd(o.net):'unknown'}
+Drivers: views ${M(w?.vph)} (${pct(w?.r?.views)}), orders/1k ${f(w?.opk,2)} (${pct(w?.r?.conv)}), AOV ${usd(w?.aov,2)} (${pct(w?.r?.aov)})
+${o.streak>=2?'Action: shift reset now (hero deal, ad top-up, co-host swap). ':''}${d&&w.r[w.weak]<1?`Weakest: ${d.name}. ${d.act}`:''}`.trim();
+  navigator.clipboard?.writeText(txt).then(()=>toast('Hourly update copied'),()=>toast('Copy failed'))};
+
+// runway inputs
+$('timeline').addEventListener('input',e=>{const k=e.target.dataset.g;if(k){setG(k,e.target.value);renderRunway(k)}});
+$('timeline').addEventListener('change',e=>{const k=e.target.dataset.gc;if(k){setG(k,e.target.checked);renderRunway()}});
+document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g)show(g.dataset.go)});
+$('asof').addEventListener('input',()=>renderRunway());
+
+// tabs & theme
+function show(v){document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.view===v));
+  document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!=='view-'+v);if(v==='runway')renderRunway();if(v==='live')render();if(v==='method')renderLedger();window.scrollTo(0,0)}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>show(t.dataset.view));
+const th=store.get('theme',matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+document.documentElement.dataset.theme=th;
+$('theme').onclick=()=>{const n=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=n;store.set('theme',n);render()};
+
+$('asof').value=localISO();
+fillSettings();render();renderLedger();
+})();
+</script>
+<script data-pplx-inline-edit>
+(function () {
+  if (window === window.top) return;
+
+  const allowedParentOrigins = ["https://www.perplexity.ai","https://perplexity.ai","https://testing.perplexity.ai","https://staging.perplexity.ai","https://*.preview.i.perplexity.ai","http://perplexity.localhost","http://localhost:1420","http://127.0.0.1:1420","http://localhost:3000","http://127.0.0.1:3000","http://localhost:5173","http://127.0.0.1:5173"];
+  const MAX_FONT_BYTES = 500 * 1024;
+  const MAX_TOTAL_FONT_BYTES = 2 * 1024 * 1024;
+  const DEFAULT_LINE_HEIGHT = 16;
+  let scrollForwarding = false;
+  let scrollRaf = 0;
+  let trustedTopOrigin = null;
+
+  // Allow entries like "https://*.preview.i.perplexity.ai" — the wildcard
+  // matches a single DNS label (no dots), so "https://*.foo" cannot stretch
+  // across multiple labels.
+  function matchesAllowedOrigin(origin) {
+    if (!origin) return false;
+    for (const entry of allowedParentOrigins) {
+      if (!entry.includes("*")) {
+        if (entry === origin) return true;
+        continue;
+      }
+      const pattern = new RegExp(
+        "^" +
+          entry.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^.]+") +
+          "$",
+      );
+      if (pattern.test(origin)) return true;
+    }
+    return false;
+  }
+
+  // Trust decision: when the sender is same-origin-visible (event.origin is a
+  // real origin like https://www.perplexity.ai) we trust event.origin directly.
+  // When event.origin is "null" (opaque broker srcdoc), we fall back to the
+  // broker's stamped `parentOrigin` to identify the top window. The fallback
+  // is claim-only — we rely on the browser's native `targetOrigin` enforcement
+  // on the response path (see postToTrustedTop) to ensure replies can't be
+  // delivered to anyone but the actual top window of that claimed origin.
+  function getTrustedParentOrigin(event) {
+    const forwardedParentOrigin =
+      typeof event.data.parentOrigin === "string" ? event.data.parentOrigin : null;
+    const parentOrigin = event.origin === "null" ? forwardedParentOrigin : event.origin;
+    return matchesAllowedOrigin(parentOrigin) ? parentOrigin : null;
+  }
+
+  // All responses go to window.top with targetOrigin = the allowlisted origin.
+  // An attacker that iframes us inside their own null-origin broker can claim
+  // any parentOrigin they like, but the browser will drop the reply whenever
+  // the real top's origin doesn't match — so the screenshot never leaves.
+  function postToTrustedTop(message) {
+    if (!trustedTopOrigin) return;
+    try {
+      window.top.postMessage(message, trustedTopOrigin);
+    } catch (_error) {}
+  }
+
+  const PICK_CAPABILITIES = ["pick"];
+  const PICK_CHAIN_LENGTH = 4;
+  const PICK_MAX_TEXT_CHARS = 120;
+  const PICK_MAX_HTML_CHARS = 300;
+
+  function truncate(value, maxChars) {
+    return value.length > maxChars ? value.slice(0, maxChars - 1) + "…" : value;
+  }
+
+  function isPickableElement(element) {
+    return (
+      element instanceof Element &&
+      element !== document.documentElement &&
+      element !== document.body
+    );
+  }
+
+  function resolvePickTarget(x, y) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    const element = document.elementFromPoint(x, y);
+    return isPickableElement(element) ? element.closest("svg") || element : null;
+  }
+
+  function pickLabel(element) {
+    if (element.id) return element.localName + "#" + element.id;
+    return [element.localName].concat(Array.from(element.classList).slice(0, 2)).join(".");
+  }
+
+  // Only attributes that help find the element in source. data-* values and URL
+  // query strings or fragments can carry tokens.
+  const PICK_ATTRIBUTES = new Set([
+    "id",
+    "class",
+    "name",
+    "type",
+    "role",
+    "alt",
+    "aria-label",
+    "href",
+    "src",
+  ]);
+
+  function pickAttributeValue(attribute) {
+    return attribute.name === "href" || attribute.name === "src"
+      ? attribute.value.split(/[?#]/)[0]
+      : attribute.value;
+  }
+
+  function describePickElement(element) {
+    const chain = [];
+    for (
+      let current = element;
+      isPickableElement(current) && chain.length < PICK_CHAIN_LENGTH;
+      current = current.parentElement
+    ) {
+      chain.unshift(current);
+    }
+    const attributes = Array.from(element.attributes)
+      .filter((attribute) => PICK_ATTRIBUTES.has(attribute.name))
+      .map((attribute) => ` ${attribute.name}="${pickAttributeValue(attribute).replace(/"/g, "&quot;")}"`)
+      .join("");
+    const text = (element.innerText || element.textContent || "").replace(/\s+/g, " ").trim();
+    return {
+      chain: chain.map(pickLabel),
+      html: truncate(`<${element.localName}${attributes}>`, PICK_MAX_HTML_CHARS),
+      text: text ? truncate(text, PICK_MAX_TEXT_CHARS) : undefined,
+    };
+  }
+
+  // Hover asks once per frame, and innerText on a large section forces layout,
+  // so only the rect is re-read while the pointer stays on the same element.
+  // Clicks ask for fresh details since the page may have changed the element.
+  let lastPick = null;
+
+  function describePickTarget(element, fresh) {
+    if (fresh || lastPick?.element !== element) {
+      lastPick = { element, details: describePickElement(element) };
+    }
+    const rect = element.getBoundingClientRect();
+    return {
+      rect: { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
+      ...lastPick.details,
+    };
+  }
+
+  function inlineAll(original, clone) {
+    if (original.nodeType !== 1 || clone.nodeType !== 1) return;
+
+    try {
+      const computedStyle = getComputedStyle(original);
+      // cssText on a computed style is the serialized declaration in modern
+      // Chromium/Safari — a single read beats enumerating ~400 longhand
+      // properties. Firefox returns "" here, so we fall back on empty.
+      const serialized = computedStyle.cssText;
+      if (serialized) {
+        clone.style.cssText = serialized;
+      } else {
+        const parts = new Array(computedStyle.length);
+        for (let index = 0; index < computedStyle.length; index += 1) {
+          const property = computedStyle[index];
+          parts[index] = `${property}:${computedStyle.getPropertyValue(property)};`;
+        }
+        clone.style.cssText = parts.join("");
+      }
+    } catch (_error) {}
+
+    const originalChildren = original.children;
+    const clonedChildren = clone.children;
+    for (
+      let index = 0;
+      index < originalChildren.length && index < clonedChildren.length;
+      index += 1
+    ) {
+      inlineAll(originalChildren[index], clonedChildren[index]);
+    }
+  }
+
+  function extractFontUrl(srcValue) {
+    const matches = [
+      ...srcValue.matchAll(
+        /url\(["']?([^"')]+)["']?\)(?:\s*format\(["']?([^"')]+)["']?\))?/gi,
+      ),
+    ];
+    if (matches.length === 0) return null;
+    const woff2 = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff2"));
+    if (woff2) return woff2[1];
+    const woff = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff"));
+    if (woff) return woff[1];
+    return matches[0][1];
+  }
+
+  // Cache resolved font URL -> data URI across captures. Fonts on a page
+  // essentially never change, and a batch run emits multiple captures back to
+  // back — without this we'd refetch + re-base64 every time.
+  const fontDataUriCache = new Map();
+  const SRC_DECLARATION_RE = /src\s*:\s*[^;}]+/i;
+
+  async function fetchAsDataUri(url) {
+    if (fontDataUriCache.has(url)) return fontDataUriCache.get(url);
+    let dataUri = null;
+    try {
+      const response = await fetch(url, { mode: "cors", credentials: "omit" });
+      if (response.ok) {
+        const blob = await response.blob();
+        if (blob.size <= MAX_FONT_BYTES) {
+          dataUri = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () =>
+              resolve(typeof reader.result === "string" ? reader.result : null);
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(blob);
+          });
+        }
+      }
+    } catch (_error) {
+      dataUri = null;
+    }
+    fontDataUriCache.set(url, dataUri);
+    return dataUri;
+  }
+
+  function collectFontFaceRuleTexts() {
+    const rules = [];
+    for (const sheet of document.styleSheets) {
+      let cssRules;
+      try {
+        cssRules = sheet.cssRules;
+      } catch (_error) {
+        continue;
+      }
+      if (!cssRules) continue;
+      for (const rule of cssRules) {
+        const cssText = rule.cssText || "";
+        if (cssText.startsWith("@font-face")) rules.push(cssText);
+      }
+    }
+    return rules;
+  }
+
+  async function buildInlinedFontCss() {
+    const ruleTexts = collectFontFaceRuleTexts();
+    if (ruleTexts.length === 0) return null;
+
+    const resolved = ruleTexts.map((cssText) => {
+      if (!SRC_DECLARATION_RE.test(cssText)) return null;
+      const srcMatch = cssText.match(/src\s*:\s*([^;}]+)[;}]/i);
+      if (!srcMatch) return null;
+      const url = extractFontUrl(srcMatch[1]);
+      if (!url) return null;
+      try {
+        return { cssText, url: new URL(url, document.baseURI).href };
+      } catch (_error) {
+        return null;
+      }
+    });
+
+    const dataUris = await Promise.all(
+      resolved.map((entry) => (entry ? fetchAsDataUri(entry.url) : Promise.resolve(null))),
+    );
+
+    const inlined = [];
+    let totalBytes = 0;
+    for (let index = 0; index < resolved.length; index += 1) {
+      const entry = resolved[index];
+      const dataUri = dataUris[index];
+      if (!entry || !dataUri) continue;
+      const approxBytes = dataUri.length * 0.75;
+      if (totalBytes + approxBytes > MAX_TOTAL_FONT_BYTES) break;
+      totalBytes += approxBytes;
+      inlined.push(entry.cssText.replace(SRC_DECLARATION_RE, `src: url("${dataUri}")`));
+    }
+    return inlined.length > 0 ? inlined.join("\n") : null;
+  }
+
+  function stripExternal(clone) {
+    const images = clone.querySelectorAll("img");
+    for (let index = 0; index < images.length; index += 1) {
+      const src = images[index].getAttribute("src");
+      if (src && !src.startsWith("data:")) images[index].removeAttribute("src");
+    }
+
+    const elements = clone.querySelectorAll("*");
+    for (let index = 0; index < elements.length; index += 1) {
+      const style = elements[index].style.cssText;
+      if (style && style.includes("url(")) {
+        elements[index].style.cssText = style.replace(
+          /url\(["']?(?!data:)[^)"']*["']?\)/gi,
+          "none",
+        );
+      }
+    }
+  }
+
+  function emitScroll() {
+    scrollRaf = 0;
+    if (!scrollForwarding) return;
+    postToTrustedTop({
+      type: "INLINE_EDIT_SCROLL",
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+      capabilities: PICK_CAPABILITIES,
+    });
+  }
+
+  window.addEventListener(
+    "scroll",
+    function () {
+      if (!scrollForwarding || scrollRaf) return;
+      scrollRaf = requestAnimationFrame(emitScroll);
+    },
+    { passive: true, capture: true },
+  );
+
+  async function handleCaptureRequest(event) {
+    const requestId = event.data.requestId;
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    function postResult(dataUrl) {
+      postToTrustedTop({
+        type: "INLINE_EDIT_SCREENSHOT_RESULT",
+        requestId,
+        dataUrl,
+        scrollX,
+        scrollY,
+      });
+    }
+
+    try {
+      // Wait for any pending web fonts to resolve so both inline metrics and
+      // the @font-face inlining below see the same loaded faces.
+      if (document.fonts && document.fonts.ready) {
+        try {
+          await document.fonts.ready;
+        } catch (_error) {}
+      }
+
+      const clone = document.documentElement.cloneNode(true);
+      inlineAll(document.documentElement, clone);
+
+      const removedNodes = clone.querySelectorAll("script,link[rel=\"stylesheet\"],style");
+      for (let index = 0; index < removedNodes.length; index += 1) {
+        removedNodes[index].remove();
+      }
+
+      stripExternal(clone);
+
+      // Re-embed web fonts as data-URI @font-face rules so the SVG rasterizer
+      // can resolve them — external font URLs aren't fetched during
+      // foreignObject rendering, which would otherwise force a fallback face
+      // and change text metrics.
+      const inlinedFontCss = await buildInlinedFontCss();
+      if (inlinedFontCss) {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = inlinedFontCss;
+        const head = clone.querySelector("head");
+        if (head) head.appendChild(styleEl);
+        else clone.insertBefore(styleEl, clone.firstChild);
+      }
+
+      const html = new XMLSerializer().serializeToString(clone);
+      const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+        '<foreignObject width="100%" height="100%">' +
+        `<div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:hidden">` +
+        `<div style="position:relative;left:-${scrollX}px;top:-${scrollY}px">` +
+        html +
+        "</div></div></foreignObject></svg>";
+      const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      const image = new Image();
+      image.onload = function () {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(image, 0, 0);
+        postResult(canvas.toDataURL("image/png"));
+      };
+      image.onerror = function () {
+        postResult(null);
+      };
+      image.src = svgUrl;
+    } catch (_error) {
+      postResult(null);
+    }
+  }
+
+  window.addEventListener("message", function (event) {
+    if (!event.data) return;
+    // Only accept messages from the direct parent frame. Blocks sibling /
+    // unrelated-window postMessage senders that could otherwise reach us.
+    if (event.source !== window.parent) return;
+
+    const trustedParentOrigin = getTrustedParentOrigin(event);
+    if (!trustedParentOrigin) return;
+    trustedTopOrigin = trustedParentOrigin;
+
+    if (event.data.type === "INLINE_EDIT_PICK") {
+      const element = resolvePickTarget(event.data.x, event.data.y);
+      postToTrustedTop({
+        type: "INLINE_EDIT_PICK_RESULT",
+        seq: event.data.seq,
+        target: element ? describePickTarget(element, event.data.fresh === true) : null,
+      });
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_START") {
+      scrollForwarding = true;
+      emitScroll();
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_STOP") {
+      scrollForwarding = false;
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
+      scrollRaf = 0;
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_BY") {
+      const { deltaX, deltaY, deltaMode } = event.data;
+      if (!scrollForwarding || !Number.isFinite(deltaX) || !Number.isFinite(deltaY)) return;
+      if (deltaMode !== 0 && deltaMode !== 1 && deltaMode !== 2) return;
+      const lineHeight =
+        parseFloat(getComputedStyle(document.documentElement).lineHeight) || DEFAULT_LINE_HEIGHT;
+      const scaleX = deltaMode === 1 ? lineHeight : deltaMode === 2 ? window.innerWidth : 1;
+      const scaleY = deltaMode === 1 ? lineHeight : deltaMode === 2 ? window.innerHeight : 1;
+      // The selection overlay receives the wheel event instead of this iframe.
+      // Instant scrolling preserves trackpad deltas even on smooth-scroll sites.
+      window.scrollBy({ left: deltaX * scaleX, top: deltaY * scaleY, behavior: "instant" });
+      emitScroll();
+      return;
+    }
+
+    if (event.data.type !== "INLINE_EDIT_CAPTURE_REQUEST") return;
+
+    handleCaptureRequest(event);
+  });
+})();
+
+
+</script></body>
+</html>
