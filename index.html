@@ -310,14 +310,14 @@ td .pill{font-size:11px;padding:2px 8px}
                 <label class="field">Show starts<input id="s-start"></label>
                 <label class="field">Show ends<input id="s-end"></label>
               </div>
-              <label class="field">Shift resets (comma separated) <span><span class="tag rule">DECK RULE</span></span><input id="s-shifts"></label>
-              <label class="field">Views per hour target <span><span class="tag rule">DECK</span> <span class="tag case">T1</span></span><input id="s-vph"></label>
+              <label class="field">Shift resets (comma separated) <span><span class="tag rule">MANAGEMENT RULE</span></span><input id="s-shifts"></label>
+              <label class="field">Views per hour target <span><span class="tag rule">PLAN</span> <span class="tag case">T1</span></span><input id="s-vph"></label>
               <div class="grid2">
                 <label class="field">Orders per 1,000 views <span><span class="tag der">DERIVED</span></span><input id="s-opk"></label>
                 <label class="field">AOV ($) <span><span class="tag der">DERIVED</span></span><input id="s-aov"></label>
               </div>
               <p class="cap" id="s-check"></p>
-              <button class="btn ghost sm" id="s-reset" style="align-self:flex-start">Reset to deck values</button>
+              <button class="btn ghost sm" id="s-reset" style="align-self:flex-start">Reset to plan values</button>
             </div>
           </details>
         </div>
@@ -348,7 +348,7 @@ td .pill{font-size:11px;padding:2px 8px}
           </div>
         </div>
         <div class="card next">
-          <div class="card-h"><h2>Next move</h2><span class="meta">from deck Q3 and Q4</span></div>
+          <div class="card-h"><h2>Next move</h2><span class="meta">from Campaign and Operational Plan </span></div>
           <div class="card-b" id="next"></div>
         </div>
       </div>
@@ -356,7 +356,7 @@ td .pill{font-size:11px;padding:2px 8px}
       <div class="card">
         <div class="card-h"><h2>Three drivers, latest hour</h2><span class="meta" id="drv-meta"></span></div>
         <div class="drivers" id="drivers"></div>
-        <p class="formula">GMV per hour = views per hour × orders per 1,000 views × AOV ÷ 1,000 (deck Q2). Each driver is read against its deck target; the three ratios multiply to the hour's GMV against target, so the smallest one is the binding driver.</p>
+        <p class="formula">GMV per hour = views per hour × orders per 1,000 views × AOV ÷ 1,000 (Strategy PLan). Each driver is read against its plan target; the three ratios multiply to the hour's GMV against target, so the smallest one is the binding driver.</p>
       </div>
 
       <div class="card">
@@ -390,7 +390,7 @@ td .pill{font-size:11px;padding:2px 8px}
 <section class="view" id="view-runway" hidden>
   <div class="rw-head">
     <div>
-      <p class="eyebrow">Deck Q4 · staged risk control</p>
+      <p class="eyebrow">Operational Plan · staged risk control</p>
       <h2>63 days, five phases, one go / no-go gate</h2>
       <p class="cap" id="rw-sum" style="margin-top:4px"></p>
     </div>
@@ -406,7 +406,7 @@ td .pill{font-size:11px;padding:2px 8px}
     <div>
       <p class="eyebrow">Every number has a source</p>
       <h2>Numbers and rules used by this tool</h2>
-      <p class="cap" style="margin-top:4px">CASE = case data (Tables 1–5). DERIVED = arithmetic on case data, formula shown. EXTERNAL = a named published source. DECK RULE = a management rule from our solution deck (or marked tool rule), not a research finding.</p>
+      <p class="cap" style="margin-top:4px">CASE = case data (Tables 1–5). DERIVED = arithmetic on case data, formula shown. EXTERNAL = a named published source. MANAGEMENT RULE = a management rule from our solution plan (or marked tool rule), not a research finding.</p>
     </div>
   </div>
   <div class="method">
@@ -416,9 +416,9 @@ td .pill{font-size:11px;padding:2px 8px}
         <div class="card-h"><h2>What the tool does</h2></div>
         <div class="card-b"><ul class="list">
           <li>Checks every completed hour against one fixed bar: target ÷ show hours.</li>
-          <li>Fires the deck's live-day warning when two hours in a row miss the bar.</li>
+          <li>Fires the plan's live-day warning when two hours in a row miss the bar.</li>
           <li>Splits each hour into views, orders per 1,000 views and AOV, and names the weakest.</li>
-          <li>Shows only actions already written in the deck (Q3 funnel actions, Q4 shift control), each with its owner.</li>
+          <li>Shows only actions already written in the plan (Strategy plan - funnel actions, Operational plan - shift control), each with its owner.</li>
           <li>Tracks the four pre-live warning signals and the 14 Nov go / no-go gate.</li>
           <li>Tracks cancellations and net GMV against the 11.11 rehearsal share.</li>
         </ul></div>
@@ -432,7 +432,7 @@ td .pill{font-size:11px;padding:2px 8px}
     <nav aria-label="Guide sections"><a href="#g1">1. Set up once</a><a href="#g2">2. Before the live</a><a href="#g3">3. Every hour on 12.12</a><a href="#g4">4. Read the screen</a><a href="#g5">5. When a signal fires</a><a href="#g6">6. Cancellations</a><a href="#g7">7. After the show</a><a href="#g8">Data rules</a></nav>
     <div class="stack">
       <section class="card" id="g1"><div class="card-b"><h3>1. Set up once</h3><ol class="steps">
-        <li><b>Open Plan settings</b> (left panel, Live day). Defaults are the deck values: USD 1M, 08:00–23:00, resets at 08:00, 13:00, 18:00, 5.1M views/h, 1.27 orders per 1,000 views, AOV $10.30.</li>
+        <li><b>Open Plan settings</b> (left panel, Live day). Defaults are the plan values: USD 1M, 08:00–23:00, resets at 08:00, 13:00, 18:00, 5.1M views/h, 1.27 orders per 1,000 views, AOV $10.30.</li>
         <li><b>Do not tune the pass mark.</b> It is always target ÷ show hours = $66,667 per hour. Change the target or hours only if the plan itself changes.</li>
         <li><b>Download the template</b> if you will import from Excel instead of typing.</li>
       </ol></div></section>
@@ -453,7 +453,7 @@ td .pill{font-size:11px;padding:2px 8px}
         <dt>Status banner</dt><dd>On pace (last hour passed) · Watch (1 miss) · Act now (2 misses in a row) · Fix data · Target met.</dd>
         <dt>KPI strip</dt><dd>Ordered GMV, gap to the straight-line plan, hours passed, cancel share and net GMV, and the catch-up rate still needed.</dd>
         <dt>Hour by hour</dt><dd>15 cells by shift. Green = hour ≥ $66,667, red = below, grey = pending or unknown. The live shift is outlined.</dd>
-        <dt>Next move</dt><dd>The pre-agreed action and its owner. Nothing here is generated: it is the deck's Q3 or Q4 wording.</dd>
+        <dt>Next move</dt><dd>The pre-agreed action and its owner. </dd>
         <dt>Three drivers</dt><dd>Which of views, conversion or AOV pulled the last hour below target. The weakest one gets its Q3 action.</dd>
       </dl></div></section>
       <section class="card" id="g5"><div class="card-b"><h3>5. When a signal fires</h3><ol class="steps">
@@ -561,7 +561,7 @@ function compute(){
   return o;
 }
 
-/* ---------- deck actions ---------- */
+/* ---------- plan actions ---------- */
 const DRV={
   views:{name:'Traffic',unit:'Views per hour',act:'Re-announce the 12.12 schedule and tease the next hidden deal; TTS tops up ads.',who:'Creator B · TTS Ops',ref:'Q3 steps 1–2'},
   conv:{name:'Conversion',unit:'Orders per 1,000 views',act:'Consult on size, colour and shade; ask viewers to pre-add before the drop; show the free-shipping voucher.',who:'Creator B · Brand rep',ref:'Q3 steps 3–5'},
@@ -592,8 +592,8 @@ function render(){
   else if(o.L){
     if(o.cum>=c.target){s='g';word='Target met';head=`${usd(o.cum)} ordered. Target reached at ${o.L.t}.`;sub='Keep running the show as planned to 23:00.'}
     else if(o.L.s==='gap'){s='u';word='Unknown';head=`Hour ending ${o.L.t} covers more than one hour.`;sub='Enter each hour separately so the 2-hour rule can be checked.'}
-    else if(o.streak>=2){s='r';word='Act now';head=`Warning signal: ${o.streak} hours in a row below ${K(c.bar)}.`;sub='Deck Q4 live-day control: bring the shift reset forward now.'}
-    else if(o.streak===1){s='a';word='Watch';head=`Hour ending ${o.L.t} missed the bar: ${K(o.L.g)} vs ${K(c.bar)}.`;sub='One more miss fires the deck warning signal. Fix the weakest driver this hour.'}
+    else if(o.streak>=2){s='r';word='Act now';head=`Warning signal: ${o.streak} hours in a row below ${K(c.bar)}.`;sub='Operational plan live-day control: bring the shift reset forward now.'}
+    else if(o.streak===1){s='a';word='Watch';head=`Hour ending ${o.L.t} missed the bar: ${K(o.L.g)} vs ${K(c.bar)}.`;sub='One more miss fires the plan warning signal. Fix the weakest driver this hour.'}
     else{s='g';word='On pace';head=`Hour ending ${o.L.t} passed: ${K(o.L.g)} vs ${K(c.bar)}.`;sub=`${o.passN} of ${o.passN+o.missN} hours passed so far.`}
   }
   B.dataset.s=s;pill.dataset.s=s;pill.lastElementChild.textContent=word;hl.textContent=head;sl.textContent=sub;
@@ -660,14 +660,14 @@ function nextMove(o){
   const c=o.c,el=$('next');
   const step=(i,what,who)=>`<div class="step"><span class="n">${i}</span><div><div class="what">${what}</div><div class="who">${who}</div></div></div>`;
   if(o.issues.length){el.innerHTML=`<div class="rulebox" data-s="r"><b>Fix data first.</b> ${esc(o.issues.join(' '))}</div><p class="cap">Decisions are blocked while counters are invalid.</p>`;return}
-  if(!o.L){el.innerHTML=`<div class="rulebox">Rule (deck Q4, live day): hourly GMV below the ${K(c.bar)} pace for 2 hours in a row → run the shift reset early.</div><p class="cap">Run of show: ${c.shifts.map(hm).join(', ')} resets as planned.</p>`;return}
+  if(!o.L){el.innerHTML=`<div class="rulebox">Rule (Operational Plan, live day): hourly GMV below the ${K(c.bar)} pace for 2 hours in a row → run the shift reset early.</div><p class="cap">Run of show: ${c.shifts.map(hm).join(', ')} resets as planned.</p>`;return}
   if(o.cum>=c.target){el.innerHTML=`<div class="rulebox" data-s="g"><b>Target reached.</b></div>${step(1,'Keep the run of show to 23:00; no extra spend needed.','Creator B · Brand rep')}${step(2,'Keep logging every hour for the 13 Dec review.','TTS Ops')}`;return}
   if(o.L.s==='gap'){el.innerHTML=`<div class="rulebox">Last entry covers more than one hour, so the 2-hour rule cannot be checked.</div>${step(1,'Enter each missing hour from the dashboard.','TTS Ops')}`;return}
   const w=o.lastHour,d=w&&w.weak?DRV[w.weak]:null;
   const nextReset=c.shifts.find(m=>m>o.L.end);
   let html='';
   if(o.streak>=2){
-    html+=`<div class="rulebox" data-s="r"><b>Warning signal fired.</b> ${o.streak} hours in a row below ${K(c.bar)}. Apply the deck's live-day control now${nextReset?`, instead of waiting for the ${hm(nextReset)} reset`:''}.</div>`;
+    html+=`<div class="rulebox" data-s="r"><b>Warning signal fired.</b> ${o.streak} hours in a row below ${K(c.bar)}. Apply the plan's live-day control now${nextReset?`, instead of waiting for the ${hm(nextReset)} reset`:''}.</div>`;
     html+=step(1,'Drop a fresh hero deal.','Creator B · Brand rep');
     html+=step(2,'Top up ads.','TTS Ops');
     html+=step(3,'Swap the co-host.','Creator B');
@@ -806,7 +806,7 @@ function renderRunway(focusKey){
   // gate
   const g=num(G('p_gmv')),h=num(G('p_hrs')),gph=fin(g)&&fin(h)&&h>0?g/h:NaN;
   const gate=$('gate');
-  if(!fin(gph)){gate.dataset.s='u';gate.innerHTML=`<div class="big">Go / no-go · 14 Nov</div><div><p><b>Awaiting 11.11 results.</b> Rule: 11.11 GPH of at least USD 68,000 keeps Creator B; otherwise switch to Creator E.</p><p class="cap">USD 68K is Creator B's case peak GPH of $67,782 (Table 1), rounded. <span class="tag rule">DECK RULE</span></p></div>`}
+  if(!fin(gph)){gate.dataset.s='u';gate.innerHTML=`<div class="big">Go / no-go · 14 Nov</div><div><p><b>Awaiting 11.11 results.</b> Rule: 11.11 GPH of at least USD 68,000 keeps Creator B; otherwise switch to Creator E.</p><p class="cap">USD 68K is Creator B's case peak GPH of $67,782 (Table 1), rounded. <span class="tag rule">MANAGEMENT RULE</span></p></div>`}
   else if(gph>=68000){gate.dataset.s='g';gate.innerHTML=`<div class="big" style="color:var(--g)">GO · Creator B</div><div><p>11.11 GPH ${usd(gph)} = ${usd(g)} ÷ ${f(h,1)} h, at or above USD 68,000.</p><p class="cap">Live-day bar stays ${usd(cfg().bar)} per hour.</p></div>`}
   else{gate.dataset.s='r';gate.innerHTML=`<div class="big" style="color:var(--r)">NO GO · switch to Creator E</div><div><p>11.11 GPH ${usd(gph)} = ${usd(g)} ÷ ${f(h,1)} h, below USD 68,000.</p><p class="cap">Creator E has been on standby since the Commit phase.</p></div>`}
   const fired=ev.filter(e=>e[0]==='r').length;
@@ -819,25 +819,25 @@ function renderLedger(){
   const c=cfg();
   const rows=[
     ['USD 1,000,000','case','Ordered GMV target for 12 Dec, from the case brief.'],
-    ['15 h, 08:00–23:00','rule','Deck Q1 and Appendix A: USD 1M ÷ B\'s peak GPH 67,782 = 14.8 h, rounded up to 15.'],
-    [usd(c.bar)+' per hour','der',`Hourly pass mark = ${usd(c.target)} ÷ ${c.H} h. The deck rounds it to USD 67K. Fixed for the whole day.`],
-    ['2 hours in a row','rule','Deck Q4 live-day warning signal. One miss shows "Watch" (1 of 2); it is the same rule, not a new threshold.'],
-    ['Shift reset','rule','Deck Q4 control: shifts of about 5 hours (08:00, 13:00, 18:00), each with a fresh hero deal, ad top-up and co-host swap.'],
-    ['5.1M views per hour','rule','Deck Appendix A target: 98% of B\'s peak 5,185,008 views per hour (Case T1).'],
+    ['15 h, 08:00–23:00','rule','Strategy Plan and Appendix A: USD 1M ÷ B\'s peak GPH 67,782 = 14.8 h, rounded up to 15.'],
+    [usd(c.bar)+' per hour','der',`Hourly pass mark = ${usd(c.target)} ÷ ${c.H} h. The plan rounds it to USD 67K. Fixed for the whole day.`],
+    ['2 hours in a row','rule','Operational plan live-day warning signal. One miss shows "Watch" (1 of 2); it is the same rule, not a new threshold.'],
+    ['Shift reset','rule','Operational plan control: shifts of about 5 hours (08:00, 13:00, 18:00), each with a fresh hero deal, ad top-up and co-host swap.'],
+    ['5.1M views per hour','rule','Operational plan Appendix A target: 98% of B\'s peak 5,185,008 views per hour (Case T1).'],
     ['1.27 orders per 1,000 views','der','B\'s peak GPM 13.07 ÷ AOV 10.28 (Case T1, T3).'],
-    ['USD 10.30 AOV','der','Order-weighted AOV over B\'s top 3 categories = 0.994 ÷ (0.607/9.9 + 0.376/11.1 + 0.011/7.3) = 10.28 (Case T3); deck rounds to 10.3.'],
-    ['USD 68K go / no-go','rule','Deck Q4 gate on 14 Nov. B\'s peak GPH 67,782 (Case T1), rounded.'],
-    ['70% stock by 6 Nov','rule','Deck Q4 Build signal, marked "proposed threshold".'],
-    ['23 Oct, 6 Nov, 14 Nov, 5 Dec, 9–11 Dec, 13 Dec','rule','Deck Q4 plan dates, written as T-minus days so they move with any campaign day.'],
+    ['USD 10.30 AOV','der','Order-weighted AOV over B\'s top 3 categories = 0.994 ÷ (0.607/9.9 + 0.376/11.1 + 0.011/7.3) = 10.28 (Case T3); plan rounds to 10.3.'],
+    ['USD 68K go / no-go','rule','Operational plan gate on 14 Nov. B\'s peak GPH 67,782 (Case T1), rounded.'],
+    ['70% stock by 6 Nov','rule','Operational plan Build signal, marked "proposed threshold".'],
+    ['23 Oct, 6 Nov, 14 Nov, 5 Dec, 9–11 Dec, 13 Dec','rule','Operational plan dates, written as T-minus days so they move with any campaign day.'],
     ['Weakest driver','der','(views ÷ 5.1M) × (orders per 1k ÷ 1.27) × (AOV ÷ 10.30) = hour GMV ÷ $66,711, the GMV the three driver targets give (within 0.1% of the bar). The smallest ratio is the binding driver.'],
-    ['Actions','rule','Driver actions are the deck Q3 funnel actions; the 2-hour response is the deck Q4 live-day control.'],
+    ['Actions','rule','Driver actions are the Campaign plan funnel actions; the 2-hour response is the Operational plan live-day control.'],
     ['Cancel share','der','Cumulative cancelled GMV ÷ cumulative ordered GMV. Net GMV = ordered − cancelled. The pass mark stays on ordered GMV, the case target basis.'],
     ['11.11 cancel benchmark','rule','11.11 cancelled GMV ÷ 11.11 GMV, entered in the Prove phase. Measured on our own rehearsal, not taken from the market.'],
     ['Headline GMV includes cancels','ext','The reported 100 billion VND Quyền Leo Daily session counted all orders placed, including cancelled and returned ones (<a href="https://congthuong.vn/an-so-phien-livestream-100-ty-dong-nguoi-trong-nghe-boc-ty-le-huy-don-318460.html" target="_blank" rel="noopener">Công Thương, 2024</a>).'],
     ['~30% (not used)','ext','An industry founder\'s illustrative estimate in the same article; the exact rate is known only to the channel owner. Not a measured rate, so not a threshold.'],
-    ['Cancel response','rule','Tool rule, not yet in the deck: the article says buyers cancel and reorder when a better price appears, so deals drop on new hero SKUs rather than as price cuts on SKUs already sold.']
+    ['Cancel response','rule','Tool rule, not yet in the plan: the article says buyers cancel and reorder when a better price appears, so deals drop on new hero SKUs rather than as price cuts on SKUs already sold.']
   ];
-  const tg={case:'<span class="tag case">CASE</span>',der:'<span class="tag der">DERIVED</span>',rule:'<span class="tag rule">DECK RULE</span>',ext:'<span class="tag case" style="color:#047857;border-color:#A7E3CC;background:#ECFBF4">EXTERNAL</span>'};
+  const tg={case:'<span class="tag case">CASE</span>',der:'<span class="tag der">DERIVED</span>',rule:'<span class="tag rule">MANAGEMENT RULE</span>',ext:'<span class="tag case" style="color:#047857;border-color:#A7E3CC;background:#ECFBF4">EXTERNAL</span>'};
   $('ledger').innerHTML=`<table><thead><tr><th>Number</th><th class="l">Backing</th><th class="l">How it is set</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${tg[r[1]]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table>`;
 }
 
@@ -863,7 +863,7 @@ $('lg-add').onclick=()=>{const a=$('lg-a').value.trim();if(!a){toast('Describe t
 const SF={target:'s-target',start:'s-start',end:'s-end',shifts:'s-shifts',vph:'s-vph',opk:'s-opk',aov:'s-aov'};
 function fillSettings(){Object.entries(SF).forEach(([k,id])=>{$(id).value=CFG[k]})}
 Object.entries(SF).forEach(([k,id])=>$(id).addEventListener('input',()=>{const v=$(id).value;CFG[k]=['start','end','shifts'].includes(k)?v:num(v);store.set('cfg',CFG);render();renderLedger()}));
-$('s-reset').onclick=()=>{CFG=Object.assign({},DEF);store.set('cfg',CFG);fillSettings();render();renderLedger();toast('Deck values restored')};
+$('s-reset').onclick=()=>{CFG=Object.assign({},DEF);store.set('cfg',CFG);fillSettings();render();renderLedger();toast('Plan values restored')};
 
 // import / template / demo
 const xtime=v=>{if(typeof v==='number'&&v>=0&&v<1.0001){const m=Math.round(v*1440);return hm(m)}const s=String(v??'').trim();const t=tm(s);return fin(t)?hm(t):''};
