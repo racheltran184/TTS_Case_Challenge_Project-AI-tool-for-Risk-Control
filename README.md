@@ -55,8 +55,6 @@ A **go / no-go gate** on 14 Nov reads the 11.11 rehearsal: GPH of at least USD 6
 
 ## Design choices
 
-- **No AI at run time.** The rules run in code, so the same hours and settings always produce the same flags, and people make the calls.
-- **No forecast.** Nothing in the case data supports an hourly shape, so the plan is a straight line: USD 66,667 × hours elapsed.
 - **No invented thresholds.** The only warning rule is the deck's: two misses in a row. The pass mark stays fixed all day; the catch-up rate is shown for information and never moves the bar.
 - **Unknown is not zero.** A skipped hour shows as unknown, and a blank cancelled-GMV field means "not tracked", not 0.
 - **Validate before deciding.** Counters can't go down, cancelled GMV can't exceed ordered GMV, entries must fall on the hour inside show hours, and orders and views must be above zero. If a check fails, the banner switches to Fix data and the next-move panel is blocked until it is fixed.
